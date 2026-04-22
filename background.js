@@ -285,8 +285,9 @@ const CATEGORY_AGENCY_MAP = {
   'MLB29884':  { agency: 'ANVISA',  reason: 'Manicure e Pedicure exige registro sanitário' },
   'MLB431646': { agency: 'ANVISA',  reason: 'Farmácia exige registro sanitário' },
   'MLB1403':   { agency: 'ANVISA',  reason: 'Alimentos e Bebidas exigem registro sanitário' },
-  // ANATEL — Telecomunicações, eletrônicos com rádio
-  'MLB1051':   { agency: 'ANATEL', reason: 'Celulares e Telefones exigem certificação ANATEL' },
+  // ANATEL — apenas dispositivos que transmitem/recebem sinal (não acessórios passivos)
+  // MLB1051 (Celulares e Telefones) excluído — contém MLB3813 (Acessórios para Celulares)
+  // que são itens passivos (suportes, capas, cabos) sem necessidade de certificação
   'MLB1055':   { agency: 'ANATEL', reason: 'Celulares e Smartphones exigem certificação ANATEL' },
   'MLB417704': { agency: 'ANATEL', reason: 'Smartwatches exigem certificação ANATEL' },
   'MLB2908':   { agency: 'ANATEL', reason: 'Rádio Comunicadores exigem certificação ANATEL' },
