@@ -78,6 +78,47 @@
     </div>`;
   }
 
+  function renderImportEligibility(imp) {
+    if (!imp) return '';
+    const statusColors = { eligible: '#00C853', restricted: '#FFD600', prohibited: '#D50000' };
+    const statusIcons  = { eligible: '✅', restricted: '⚠️', prohibited: '🚫' };
+    const color = statusColors[imp.status] || '#90A4AE';
+    const icon  = statusIcons[imp.status]  || '•';
+
+    const regimeColor = imp.regime.taxFree ? '#00C853' : imp.regime.tax != null ? '#FFD600' : '#FF6D00';
+    const regimeTax   = imp.regime.taxFree
+      ? 'Isento de imposto de importação'
+      : imp.regime.tax != null
+        ? `${imp.regime.tax}% de imposto de importação`
+        : 'Requer despacho aduaneiro formal';
+
+    const restrictionChips = imp.restrictions.map(r =>
+      `<div class="mls-import-chip" title="${escapeHtml(r.reason)}">
+        <span class="mls-import-chip-agency">${r.agency}</span>
+        <span class="mls-import-chip-reason">${escapeHtml(r.reason)}</span>
+       </div>`
+    ).join('');
+
+    return `
+      <div class="mls-divider"></div>
+      <div class="mls-section-title">Importação Simplificada</div>
+      <div class="mls-import-card">
+        <div class="mls-import-status-row">
+          <span class="mls-import-badge" style="background:${color}20;color:${color};border-color:${color}40">
+            ${icon} ${escapeHtml(imp.label)}
+          </span>
+          <span class="mls-import-price">≈ U$ ${imp.priceUSD}</span>
+        </div>
+        ${imp.note ? `<div class="mls-import-note">${escapeHtml(imp.note)}</div>` : ''}
+        <div class="mls-import-regime" style="border-left-color:${regimeColor}">
+          <span class="mls-import-regime-label" style="color:${regimeColor}">${escapeHtml(imp.regime.label)}</span>
+          <span class="mls-import-regime-tax">${regimeTax}</span>
+        </div>
+        ${restrictionChips ? `<div class="mls-import-chips">${restrictionChips}</div>` : ''}
+        <div class="mls-import-footnote">Cotação indicativa (U$ 1 ≈ R$ 5,70). Valor de referência baseado no preço do anúncio.</div>
+      </div>`;
+  }
+
   function buildPanelHTML(data) {
     const { score, seller, reviews, competition, monthlySales, opportunity, category } = data;
     const priceStats = competition.priceStats, currency = data.currencyId || 'BRL';
@@ -146,6 +187,7 @@
         <span class="mls-opportunity-badge" style="background:${oppColor};color:#0D1117">${opportunity.label}</span>
       </div>
       <div class="mls-opp-detail">${competition.totalSearch > 0 ? `${formatNumber(competition.totalSearch)} produtos similares nessa categoria` : 'Sem dados de concorrência'}</div>
+      ${renderImportEligibility(data.importEligibility)}
       <div class="mls-footer"><span>${data.itemId}</span><button class="mls-refresh-btn" id="mls-refresh">↻ Atualizar</button></div>`;
   }
 

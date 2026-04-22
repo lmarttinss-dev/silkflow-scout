@@ -502,6 +502,103 @@
   color: #8892A4;
 }
 
+/* ── Import Eligibility ──────────────────────────────────────────────────────── */
+
+.mls-import-card {
+  margin: 4px 16px 10px;
+  background: #161B22;
+  border: 1px solid #21262D;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mls-import-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mls-import-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  letter-spacing: 0.3px;
+}
+
+.mls-import-price {
+  font-size: 11px;
+  color: #8892A4;
+  font-variant-numeric: tabular-nums;
+}
+
+.mls-import-regime {
+  border-left: 3px solid #1E2A3A;
+  padding-left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mls-import-regime-label {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mls-import-regime-tax {
+  font-size: 11px;
+  color: #8892A4;
+}
+
+.mls-import-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mls-import-chip {
+  background: rgba(255, 109, 0, 0.08);
+  border: 1px solid rgba(255, 109, 0, 0.25);
+  border-radius: 6px;
+  padding: 5px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mls-import-chip-agency {
+  font-size: 10px;
+  font-weight: 700;
+  color: #FF6D00;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mls-import-chip-reason {
+  font-size: 10px;
+  color: #8892A4;
+  line-height: 1.4;
+}
+
+.mls-import-note {
+  font-size: 11px;
+  color: #D50000;
+  line-height: 1.4;
+}
+
+.mls-import-footnote {
+  font-size: 9px;
+  color: #4A5568;
+  line-height: 1.4;
+  border-top: 1px solid #1E2A3A;
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
 /* ── Search Badges ───────────────────────────────────────────────────────────── */
 
 .mls-search-badge {
