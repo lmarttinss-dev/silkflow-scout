@@ -78,6 +78,136 @@
     </div>`;
   }
 
+  function renderImportEligibility(imp) {
+    if (!imp) return '';
+    const statusColors = { eligible: '#00C853', restricted: '#FFD600', prohibited: '#D50000' };
+    const statusIcons  = { eligible: '✅', restricted: '⚠️', prohibited: '🚫' };
+    const color = statusColors[imp.status] || '#90A4AE';
+    const icon  = statusIcons[imp.status]  || '•';
+
+    const regimeColor = imp.regime.taxFree ? '#00C853' : imp.regime.tax != null ? '#FFD600' : '#FF6D00';
+    const regimeTax   = imp.regime.taxFree
+      ? 'Isento de imposto de importação'
+      : imp.regime.tax != null
+        ? `${imp.regime.tax}% de imposto de importação`
+        : 'Requer despacho aduaneiro formal';
+
+    const restrictionChips = imp.restrictions.map(r =>
+      `<div class="mls-import-chip" title="${escapeHtml(r.reason)}">
+        <span class="mls-import-chip-agency">${r.agency}</span>
+        <span class="mls-import-chip-reason">${escapeHtml(r.reason)}</span>
+       </div>`
+    ).join('');
+
+    return `
+      <div class="mls-divider"></div>
+      <div class="mls-section-title">Importação Simplificada</div>
+      <div class="mls-import-card">
+        <div class="mls-import-status-row">
+          <span class="mls-import-badge" style="background:${color}20;color:${color};border-color:${color}40">
+            ${icon} ${escapeHtml(imp.label)}
+          </span>
+          <span class="mls-import-price">≈ U$ ${imp.priceUSD}</span>
+        </div>
+        ${imp.note ? `<div class="mls-import-note">${escapeHtml(imp.note)}</div>` : ''}
+        <div class="mls-import-regime" style="border-left-color:${regimeColor}">
+          <span class="mls-import-regime-label" style="color:${regimeColor}">${escapeHtml(imp.regime.label)}</span>
+          <span class="mls-import-regime-tax">${regimeTax}</span>
+        </div>
+        ${restrictionChips ? `<div class="mls-import-chips">${restrictionChips}</div>` : ''}
+        <div class="mls-import-footnote">Cotação indicativa (U$ 1 ≈ R$ 5,70). Valor de referência baseado no preço do anúncio.</div>
+      </div>`;
+  }
+
+  function renderCostCalculator(data) {
+    const taxRate = data.importEligibility?.regime?.taxFree ? 0
+                  : (data.importEligibility?.regime?.tax ?? 20);
+    return `
+      <div class="mls-divider"></div>
+      <div class="mls-section-title">Calculadora de Custo</div>
+      <div class="mls-calc-card">
+        <div class="mls-calc-input-row">
+          <label class="mls-calc-label" for="mls-china-price">Preço China (U$)</label>
+          <input class="mls-calc-input" id="mls-china-price" type="number" min="0" step="0.01" placeholder="0,00">
+        </div>
+        <div class="mls-calc-input-row">
+          <label class="mls-calc-label" for="mls-shipping">Frete (R$)</label>
+          <input class="mls-calc-input" id="mls-shipping" type="number" min="0" step="1" value="30">
+        </div>
+        <div class="mls-calc-result" id="mls-calc-result" style="display:none">
+          <div class="mls-calc-row"><span>Produto (BRL)</span><span id="cr-product">—</span></div>
+          <div class="mls-calc-row"><span>Frete</span><span id="cr-shipping">—</span></div>
+          <div class="mls-calc-row mls-calc-tax" id="cr-tax-row"><span>Imposto import. (${taxRate}%)</span><span id="cr-tax">—</span></div>
+          <div class="mls-calc-row mls-calc-subtotal"><span>Custo total</span><span id="cr-total">—</span></div>
+          <div class="mls-calc-row"><span>Comissão ML (~12%)</span><span id="cr-commission">—</span></div>
+          <div class="mls-calc-divider"></div>
+          <div class="mls-calc-row mls-calc-margin-row">
+            <span>Margem bruta</span>
+            <span id="cr-margin">—</span>
+          </div>
+          <div class="mls-calc-margin-bar-wrap">
+            <div class="mls-calc-margin-bar"><div class="mls-calc-margin-fill" id="cr-margin-fill"></div></div>
+            <span class="mls-calc-margin-pct" id="cr-margin-pct">—</span>
+          </div>
+        </div>
+        <div class="mls-calc-footnote" id="mls-calc-empty">Informe o preço de compra na China para calcular.</div>
+      </div>`;
+  }
+
+  function initCalculator(data) {
+    const USD_RATE  = 5.7;
+    const ML_FEE    = 0.12;
+    const mlPrice   = data.price || 0;
+    const taxRate   = data.importEligibility?.regime?.taxFree ? 0
+                    : (data.importEligibility?.regime?.tax ?? 20) / 100;
+
+    function recalc() {
+      const chinaUSD  = parseFloat(document.getElementById('mls-china-price')?.value) || 0;
+      const shipping  = parseFloat(document.getElementById('mls-shipping')?.value)    || 0;
+      const result    = document.getElementById('mls-calc-result');
+      const empty     = document.getElementById('mls-calc-empty');
+      if (!result || !empty) return;
+
+      if (chinaUSD <= 0) { result.style.display = 'none'; empty.style.display = 'block'; return; }
+      result.style.display = 'block'; empty.style.display = 'none';
+
+      const productBRL   = chinaUSD * USD_RATE;
+      const taxBase      = productBRL + shipping;
+      const importTax    = taxBase * taxRate;
+      const totalCost    = productBRL + shipping + importTax;
+      const commission   = mlPrice * ML_FEE;
+      const grossMargin  = mlPrice - totalCost - commission;
+      const marginPct    = mlPrice > 0 ? (grossMargin / mlPrice) * 100 : 0;
+      const marginColor  = marginPct >= 30 ? '#00C853' : marginPct >= 15 ? '#FFD600' : '#FF6D00';
+      const fillPct      = Math.max(0, Math.min(100, marginPct));
+
+      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      const fmt = v => formatCurrency(v, 'BRL');
+
+      set('cr-product',    fmt(productBRL));
+      set('cr-shipping',   fmt(shipping));
+      set('cr-tax',        fmt(importTax));
+      set('cr-total',      fmt(totalCost));
+      set('cr-commission', fmt(commission));
+      set('cr-margin',     fmt(grossMargin));
+      set('cr-margin-pct', `${marginPct.toFixed(1)}%`);
+
+      const marginEl = document.getElementById('cr-margin');
+      const pctEl    = document.getElementById('cr-margin-pct');
+      const fillEl   = document.getElementById('cr-margin-fill');
+      if (marginEl) marginEl.style.color = marginColor;
+      if (pctEl)    pctEl.style.color    = marginColor;
+      if (fillEl)   { fillEl.style.width = `${fillPct}%`; fillEl.style.background = marginColor; }
+
+      const taxRow = document.getElementById('cr-tax-row');
+      if (taxRow) taxRow.style.display = taxRate > 0 ? 'flex' : 'none';
+    }
+
+    document.getElementById('mls-china-price')?.addEventListener('input', recalc);
+    document.getElementById('mls-shipping')?.addEventListener('input', recalc);
+    recalc();
+  }
+
   function buildPanelHTML(data) {
     const { score, seller, reviews, competition, monthlySales, opportunity, category } = data;
     const priceStats = competition.priceStats, currency = data.currencyId || 'BRL';
@@ -146,6 +276,8 @@
         <span class="mls-opportunity-badge" style="background:${oppColor};color:#0D1117">${opportunity.label}</span>
       </div>
       <div class="mls-opp-detail">${competition.totalSearch > 0 ? `${formatNumber(competition.totalSearch)} produtos similares nessa categoria` : 'Sem dados de concorrência'}</div>
+      ${renderImportEligibility(data.importEligibility)}
+      ${renderCostCalculator(data)}
       <div class="mls-footer"><span>${data.itemId}</span><button class="mls-refresh-btn" id="mls-refresh">↻ Atualizar</button></div>`;
   }
 
@@ -217,6 +349,7 @@
       setLoading();
       chrome.runtime.sendMessage({ type: 'CLEAR_CACHE' }, () => requestAnalysis(currentPageInfo));
     });
+    initCalculator(data);
   }
 
   function requestAnalysis(pageInfo) {

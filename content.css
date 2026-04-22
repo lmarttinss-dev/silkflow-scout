@@ -502,6 +502,215 @@
   color: #8892A4;
 }
 
+/* ── Import Eligibility ──────────────────────────────────────────────────────── */
+
+.mls-import-card {
+  margin: 4px 16px 10px;
+  background: #161B22;
+  border: 1px solid #21262D;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mls-import-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mls-import-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  letter-spacing: 0.3px;
+}
+
+.mls-import-price {
+  font-size: 11px;
+  color: #8892A4;
+  font-variant-numeric: tabular-nums;
+}
+
+.mls-import-regime {
+  border-left: 3px solid #1E2A3A;
+  padding-left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mls-import-regime-label {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mls-import-regime-tax {
+  font-size: 11px;
+  color: #8892A4;
+}
+
+.mls-import-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mls-import-chip {
+  background: rgba(255, 109, 0, 0.08);
+  border: 1px solid rgba(255, 109, 0, 0.25);
+  border-radius: 6px;
+  padding: 5px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mls-import-chip-agency {
+  font-size: 10px;
+  font-weight: 700;
+  color: #FF6D00;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mls-import-chip-reason {
+  font-size: 10px;
+  color: #8892A4;
+  line-height: 1.4;
+}
+
+.mls-import-note {
+  font-size: 11px;
+  color: #D50000;
+  line-height: 1.4;
+}
+
+.mls-import-footnote {
+  font-size: 9px;
+  color: #4A5568;
+  line-height: 1.4;
+  border-top: 1px solid #1E2A3A;
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+/* ── Cost Calculator ─────────────────────────────────────────────────────────── */
+
+.mls-calc-card {
+  margin: 4px 16px 10px;
+  background: #161B22;
+  border: 1px solid #21262D;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mls-calc-input-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mls-calc-label {
+  font-size: 11px;
+  color: #8892A4;
+  flex-shrink: 0;
+}
+
+.mls-calc-input {
+  background: #0D1117;
+  border: 1px solid #1E2A3A;
+  border-radius: 6px;
+  color: #E6EDF3;
+  font-size: 12px;
+  padding: 5px 8px;
+  width: 100px;
+  text-align: right;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.mls-calc-input:focus { border-color: #FFE600; }
+.mls-calc-input::-webkit-inner-spin-button { opacity: 0.4; }
+
+.mls-calc-result {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-top: 4px;
+}
+
+.mls-calc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #8892A4;
+}
+
+.mls-calc-tax { opacity: 0.9; }
+
+.mls-calc-subtotal {
+  font-size: 12px;
+  font-weight: 700;
+  color: #E6EDF3;
+  padding-top: 2px;
+}
+
+.mls-calc-divider {
+  height: 1px;
+  background: #1E2A3A;
+  margin: 2px 0;
+}
+
+.mls-calc-margin-row {
+  font-size: 13px;
+  font-weight: 700;
+  color: #E6EDF3;
+}
+
+.mls-calc-margin-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mls-calc-margin-bar {
+  flex: 1;
+  height: 5px;
+  background: #1E2A3A;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.mls-calc-margin-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease, background 0.3s;
+}
+
+.mls-calc-margin-pct {
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 38px;
+  text-align: right;
+}
+
+.mls-calc-footnote {
+  font-size: 10px;
+  color: #4A5568;
+  text-align: center;
+  padding: 4px 0 2px;
+}
+
 /* ── Search Badges ───────────────────────────────────────────────────────────── */
 
 .mls-search-badge {

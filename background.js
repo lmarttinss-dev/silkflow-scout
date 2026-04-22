@@ -245,6 +245,116 @@ function getPriceStats(competition, currentPrice) {
   return { min, max, avg: Math.round(avg * 100) / 100, percentile };
 }
 
+// Regras de certificação por palavras-chave no caminho da categoria / título
+const IMPORT_RULES = [
+  {
+    agency: 'ANATEL',
+    reason: 'Equipamentos com rádio ou telecomunicação exigem certificação',
+    pattern: /celular|smartphone|tablet|notebook|computador|roteador|modem|wi-fi|wifi|bluetooth|drone|câmera\s*ip|gps|walkie|radio|antena|tv\s|televisão|monitor|console|videogame|fone|headset|caixa\s*de\s*som|speaker/i
+  },
+  {
+    agency: 'ANVISA',
+    reason: 'Cosméticos, suplementos e alimentos exigem registro sanitário',
+    // Categorias ML: "Beleza e Cuidado Pessoal", "Saúde", "Alimentos e Bebidas"
+    // Formas cosméticas: emulsão, sérum, loção, gel, tônico, esfoliante, máscara...
+    // Produtos capilares: capilar, leave-in, finalizador, alisamento, tintura, coloração...
+    pattern: /beleza\s*e\s*cuidado|cuidado\s*pessoal|higiene\s*pessoal|saúde\s*e\s*bem[-\s]estar|alimentos\s*e\s*bebidas|cosmético|perfume|creme|protetor\s*solar|shampoo|condicionador|maquiagem|batom|base\s*facial|capilar|emulsão|sérum|séro|loção|tônico|esfoliante|máscara\s*(capilar|facial|de\s*cabelo)|leave[-\s]in|finalizador|alisamento|tintura|coloração\s*capilar|hidratante|sabonete|desodorante|creme\s*dental|pasta\s*de\s*dente|enxaguante|suplemento|vitamina|proteína|whey|colágeno|alimento|bebida|café|chá\s|energético/i
+  },
+  {
+    agency: 'INMETRO',
+    reason: 'Brinquedos e equipamentos elétricos exigem certificação de segurança',
+    pattern: /brinquedo|boneca|carrinho\s*de\s*brinquedo|lego|massinha|quebra-cabeça|capacete|extintor|cabo\s*elétrico|tomada|extensão\s*elétrica/i
+  }
+];
+
+const PROHIBITED_PATTERN = /arma\s*de\s*fogo|munição|explosivo|narcótico|medicamento\s*controlado|remédio\s*controlado/i;
+
+// Mapa estático: category_id do ML → agência reguladora
+// Cobre automaticamente todos os filhos via path_from_root — sem depender de keywords no título
+const CATEGORY_AGENCY_MAP = {
+  // ANVISA — Beleza, Higiene, Alimentos
+  'MLB1246':   { agency: 'ANVISA',  reason: 'Beleza e Cuidado Pessoal exige registro sanitário' },
+  'MLB1263':   { agency: 'ANVISA',  reason: 'Cuidados com o Cabelo exige registro sanitário' },
+  'MLB199407': { agency: 'ANVISA',  reason: 'Cuidados com a Pele exige registro sanitário' },
+  'MLB1248':   { agency: 'ANVISA',  reason: 'Maquiagem exige registro sanitário' },
+  'MLB6284':   { agency: 'ANVISA',  reason: 'Perfumes exigem registro sanitário' },
+  'MLB198312': { agency: 'ANVISA',  reason: 'Higiene Pessoal exige registro sanitário' },
+  'MLB278194': { agency: 'ANVISA',  reason: 'Tratamentos de Beleza exigem registro sanitário' },
+  'MLB264787': { agency: 'ANVISA',  reason: 'Produtos de Barbearia exigem registro sanitário' },
+  'MLB5383':   { agency: 'ANVISA',  reason: 'Depilação exige registro sanitário' },
+  'MLB29884':  { agency: 'ANVISA',  reason: 'Manicure e Pedicure exige registro sanitário' },
+  'MLB431646': { agency: 'ANVISA',  reason: 'Farmácia exige registro sanitário' },
+  'MLB1403':   { agency: 'ANVISA',  reason: 'Alimentos e Bebidas exigem registro sanitário' },
+  // ANATEL — Telecomunicações, eletrônicos com rádio
+  'MLB1051':   { agency: 'ANATEL', reason: 'Celulares e Telefones exigem certificação ANATEL' },
+  'MLB1055':   { agency: 'ANATEL', reason: 'Celulares e Smartphones exigem certificação ANATEL' },
+  'MLB417704': { agency: 'ANATEL', reason: 'Smartwatches exigem certificação ANATEL' },
+  'MLB2908':   { agency: 'ANATEL', reason: 'Rádio Comunicadores exigem certificação ANATEL' },
+  'MLB438581': { agency: 'ANATEL', reason: 'Telefonia Fixa e Sem Fio exige certificação ANATEL' },
+  'MLB1039':   { agency: 'ANATEL', reason: 'Câmeras e Acessórios exigem certificação ANATEL' },
+  'MLB264065': { agency: 'ANATEL', reason: 'Drones e Acessórios exigem certificação ANATEL' },
+  'MLB1002':   { agency: 'ANATEL', reason: 'Televisores exigem certificação ANATEL' },
+  'MLB133950': { agency: 'ANATEL', reason: 'Media Streaming exige certificação ANATEL' },
+  'MLB3835':   { agency: 'ANATEL', reason: 'Equipamentos de Áudio exigem certificação ANATEL' },
+  'MLB1700':   { agency: 'ANATEL', reason: 'Conectividade e Redes exige certificação ANATEL' },
+  'MLB91757':  { agency: 'ANATEL', reason: 'Tablets e Acessórios exigem certificação ANATEL' },
+  'MLB430687': { agency: 'ANATEL', reason: 'Notebooks e Portáteis exigem certificação ANATEL' },
+  // INMETRO — Brinquedos
+  'MLB1132':   { agency: 'INMETRO', reason: 'Brinquedos exigem certificação INMETRO' },
+  'MLB264337': { agency: 'INMETRO', reason: 'Bonecos e Bonecas exigem certificação INMETRO' },
+  'MLB2961':   { agency: 'INMETRO', reason: 'Brinquedos Eletrônicos exigem certificação INMETRO' },
+  'MLB432818': { agency: 'INMETRO', reason: 'Brinquedos de Faz de Conta exigem certificação INMETRO' },
+  'MLB455425': { agency: 'INMETRO', reason: 'Brinquedos de Montar exigem certificação INMETRO' },
+  'MLB3655':   { agency: 'INMETRO', reason: 'Brinquedos para Bebês exigem certificação INMETRO' },
+  'MLB6911':   { agency: 'INMETRO', reason: 'Ar Livre e Playground exige certificação INMETRO' },
+};
+
+// Cotação indicativa — usada apenas como referência visual para o usuário
+const USD_RATE_INDICATIVE = 5.7;
+
+function checkImportEligibility(categoryPath, title, pathFromRoot = []) {
+  const text = `${categoryPath} ${title}`.toLowerCase();
+
+  if (PROHIBITED_PATTERN.test(text)) {
+    return { status: 'prohibited', label: 'Proibido', restrictions: [],
+             note: 'Categoria com restrição total à importação.' };
+  }
+
+  // Caminho por ID — disponível quando a API retornou category.path_from_root
+  if (pathFromRoot.length > 0) {
+    const seen = new Set();
+    const restrictions = [];
+    for (const node of pathFromRoot) {
+      const entry = CATEGORY_AGENCY_MAP[node.id];
+      if (entry && !seen.has(entry.agency)) {
+        seen.add(entry.agency);
+        restrictions.push({ agency: entry.agency, reason: entry.reason });
+      }
+    }
+    return {
+      status: restrictions.length > 0 ? 'restricted' : 'eligible',
+      label:  restrictions.length > 0 ? 'Requer certificação' : 'Elegível',
+      restrictions
+    };
+  }
+
+  // Fallback por keyword — cenário DOM-only (_fromDom: true, sem IDs de categoria)
+  const restrictions = IMPORT_RULES
+    .filter(r => r.pattern.test(text))
+    .map(r => ({ agency: r.agency, reason: r.reason }));
+  return {
+    status: restrictions.length > 0 ? 'restricted' : 'eligible',
+    label:  restrictions.length > 0 ? 'Requer certificação' : 'Elegível',
+    restrictions
+  };
+}
+
+function buildImportRegime(priceUSD) {
+  if (priceUSD <= 50)   return { label: 'Remessa Conforme', taxFree: true,  tax: 0,  maxUSD: 50 };
+  if (priceUSD <= 3000) return { label: 'Importação Simplificada', taxFree: false, tax: 20, maxUSD: 3000 };
+  return { label: 'Importação Formal', taxFree: false, tax: null, maxUSD: null };
+}
+
 function buildAnalysis({ item, seller, category, reviews, competition, sameItem, score }) {
   const monthlySales = estimateMonthlySales(item, reviews);
   const priceStats = getPriceStats(competition, item.price);
@@ -270,6 +380,14 @@ function buildAnalysis({ item, seller, category, reviews, competition, sameItem,
   else { opportunityLabel = 'Baixa'; opportunityClass = 'low'; }
 
   const categoryPath = category?.path_from_root?.map(c => c.name).join(' › ') || category?.name || '';
+
+  const priceUSD = Math.round((item.price || 0) / USD_RATE_INDICATIVE);
+  const eligibility = checkImportEligibility(
+    categoryPath,
+    item.title || '',
+    category?.path_from_root || []
+  );
+  const regime = buildImportRegime(priceUSD);
 
   return {
     itemId: item.id,
@@ -308,6 +426,14 @@ function buildAnalysis({ item, seller, category, reviews, competition, sameItem,
       id: item.category_id,
       name: category?.name || '',
       path: categoryPath
+    },
+    importEligibility: {
+      status: eligibility.status,
+      label: eligibility.label,
+      restrictions: eligibility.restrictions,
+      note: eligibility.note || null,
+      regime,
+      priceUSD
     }
   };
 }
