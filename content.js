@@ -1,0 +1,275 @@
+/**
+ * Silkflow Scout — content script orquestrador.
+ * Detecta o marketplace atual e delega para o módulo correspondente.
+ * Os módulos (MercadoLivre, Shopee, Amazon) são injetados antes deste arquivo.
+ */
+(() => {
+  'use strict';
+
+  const MODULES = [MercadoLivre, Shopee, Amazon];
+
+  let currentPageInfo = null;
+  let analysisStarted = false;
+
+  function detectModule() {
+    for (const mod of MODULES) {
+      try { if (mod.isMatch(location.href)) return mod; } catch { }
+    }
+    return null;
+  }
+
+  function findProductOnPage() {
+    const mod = detectModule();
+    return mod ? mod.detect(location.href) : null;
+  }
+
+  function formatCurrency(value, currency) {
+    const cur = (currency && currency !== 'BRL') ? currency : 'BRL';
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: cur, minimumFractionDigits: 2 }).format(value);
+  }
+
+  function formatNumber(n) { return new Intl.NumberFormat('pt-BR').format(n); }
+
+  function scoreColor(s) {
+    if (s >= 75) return '#00C853'; if (s >= 50) return '#FFD600';
+    if (s >= 30) return '#FF6D00'; return '#D50000';
+  }
+
+  function scoreLabel(s) {
+    if (s >= 75) return 'Excelente'; if (s >= 50) return 'Bom';
+    if (s >= 30) return 'Regular';  return 'Fraco';
+  }
+
+  function reputationColor(level) {
+    return { '5_green': '#00C853', '4_light_green': '#69F0AE', '3_yellow': '#FFD600',
+             '2_orange': '#FF6D00', '1_red': '#D50000' }[level] || '#90A4AE';
+  }
+
+  function renderStars(rating) {
+    const full = Math.floor(rating), half = rating - full >= 0.5 ? 1 : 0;
+    return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - half);
+  }
+
+  function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+  function truncate(str, len) { return str && str.length > len ? str.substring(0, len) + '…' : (str || ''); }
+
+  function renderScoreCircle(score) {
+    const color = scoreColor(score), r = 44, c = 2 * Math.PI * r, progress = (score / 100) * c;
+    return `<div class="mls-score-container">
+      <svg viewBox="0 0 100 100" width="100" height="100">
+        <circle cx="50" cy="50" r="${r}" fill="none" stroke="#1E2A3A" stroke-width="8"/>
+        <circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="8"
+          stroke-dasharray="${progress} ${c}" stroke-linecap="round" transform="rotate(-90 50 50)"/>
+        <text x="50" y="45" text-anchor="middle" dominant-baseline="middle"
+          fill="${color}" font-size="22" font-weight="bold" font-family="sans-serif">${score}</text>
+        <text x="50" y="63" text-anchor="middle" dominant-baseline="middle"
+          fill="#8892A4" font-size="9" font-family="sans-serif">SCORE</text>
+      </svg>
+      <div class="mls-score-label" style="color:${color}">${scoreLabel(score)}</div>
+    </div>`;
+  }
+
+  function renderSubScoreBar(label, value) {
+    const color = scoreColor(value);
+    return `<div class="mls-subscore-row">
+      <span class="mls-subscore-label">${label}</span>
+      <div class="mls-subscore-track"><div class="mls-subscore-fill" style="width:${value}%;background:${color}"></div></div>
+      <span class="mls-subscore-value" style="color:${color}">${value}</span>
+    </div>`;
+  }
+
+  function buildPanelHTML(data) {
+    const { score, seller, reviews, competition, monthlySales, opportunity, category } = data;
+    const priceStats = competition.priceStats, currency = data.currencyId || 'BRL';
+    const salesRange = monthlySales > 0
+      ? `~${formatNumber(Math.max(1, monthlySales - 10))}–${formatNumber(monthlySales + 15)}` : 'Sem dados';
+    const competitionText = competition.sameItem > 0
+      ? `${formatNumber(competition.sameItem)} ${competition.sameItem === 1 ? 'vendedor' : 'vendedores'}` : 'Exclusivo';
+    const avgPrice = priceStats ? formatCurrency(priceStats.avg, currency) : 'N/D';
+    let pricePosition = 'N/D', priceClass = '';
+    if (priceStats) {
+      if (priceStats.percentile <= 33)      { pricePosition = '⬇ Abaixo da média'; priceClass = 'mls-low'; }
+      else if (priceStats.percentile <= 66) { pricePosition = '➡ Na média';        priceClass = 'mls-mid'; }
+      else                                  { pricePosition = '⬆ Acima da média';  priceClass = 'mls-high-price'; }
+    }
+    const oppColors = { high: '#00C853', medium: '#FFD600', low: '#FF6D00' };
+    const oppColor  = oppColors[opportunity.class] || '#90A4AE';
+    const mktLabel  = { mercadolivre: 'Mercado Livre', shopee: 'Shopee', amazon: 'Amazon' }[data.marketplace] || '';
+
+    return `
+      <div class="mls-header">
+        <div class="mls-logo"><span class="mls-logo-icon">🔍</span><span class="mls-logo-text">Silkflow Scout</span></div>
+        <button class="mls-close-btn" id="mls-close">✕</button>
+      </div>
+      ${data.partialData ? `<div class="mls-partial-banner">⚠️ Dados parciais — API indisponível para este item</div>` : ''}
+      ${mktLabel ? `<div class="mls-marketplace-tag">${mktLabel}</div>` : ''}
+      <div class="mls-product-title" title="${escapeHtml(data.title)}">${escapeHtml(truncate(data.title, 55))}</div>
+      <div class="mls-price-chip">${formatCurrency(data.price, currency)}<span class="mls-condition">${data.condition}</span></div>
+      <div class="mls-score-section">
+        ${renderScoreCircle(score.total)}
+        <div class="mls-subscores">
+          ${renderSubScoreBar('Demanda', score.demand)}
+          ${renderSubScoreBar('Oportunidade', score.opportunity)}
+          ${renderSubScoreBar('Qualidade', score.quality)}
+          ${renderSubScoreBar('Vendedor', score.seller)}
+        </div>
+      </div>
+      <div class="mls-divider"></div>
+      <div class="mls-metrics-grid">
+        <div class="mls-metric-card"><div class="mls-metric-icon">📦</div><div class="mls-metric-value">${salesRange}</div><div class="mls-metric-label">Vendas/mês est.</div></div>
+        <div class="mls-metric-card"><div class="mls-metric-icon">👥</div><div class="mls-metric-value">${competitionText}</div><div class="mls-metric-label">Vendedores</div></div>
+        <div class="mls-metric-card"><div class="mls-metric-icon">💲</div><div class="mls-metric-value">${avgPrice}</div><div class="mls-metric-label">Preço médio</div></div>
+        <div class="mls-metric-card"><div class="mls-metric-icon">⭐</div><div class="mls-metric-value">${reviews.rating > 0 ? reviews.rating.toFixed(1) : 'N/D'}</div><div class="mls-metric-label">${reviews.total > 0 ? formatNumber(reviews.total) + ' avaliações' : 'Sem avaliações'}</div></div>
+      </div>
+      ${reviews.rating > 0 ? `<div class="mls-stars-row"><span class="mls-stars">${renderStars(reviews.rating)}</span><span class="mls-rating-num">${reviews.rating.toFixed(1)}</span></div>` : ''}
+      <div class="mls-divider"></div>
+      <div class="mls-section-title">Posicionamento de Preço</div>
+      <div class="mls-price-row">
+        <span class="mls-price-pos ${priceClass}">${pricePosition}</span>
+        ${priceStats ? `<span class="mls-price-range">${formatCurrency(priceStats.min, currency)} – ${formatCurrency(priceStats.max, currency)}</span>` : ''}
+      </div>
+      ${priceStats ? `<div class="mls-price-bar-wrapper"><div class="mls-price-bar"><div class="mls-price-bar-fill" style="width:${priceStats.percentile}%"></div><div class="mls-price-bar-marker" style="left:${priceStats.percentile}%">▲</div></div><div class="mls-price-bar-labels"><span>Min</span><span>Máx</span></div></div>` : ''}
+      <div class="mls-divider"></div>
+      <div class="mls-section-title">Vendedor</div>
+      <div class="mls-seller-card">
+        <div class="mls-seller-name">${escapeHtml(seller.nickname)}</div>
+        ${seller.powerSeller ? `<div class="mls-power-seller">${escapeHtml(seller.powerSeller)}</div>` : ''}
+        <div class="mls-seller-rep"><span class="mls-rep-dot" style="background:${reputationColor(seller.level)}"></span><span>Reputação: <strong>${seller.reputation}</strong></span></div>
+        ${seller.totalSales > 0 ? `<div class="mls-seller-sales">${formatNumber(seller.totalSales)} vendas concluídas</div>` : ''}
+      </div>
+      <div class="mls-divider"></div>
+      <div class="mls-section-title">Categoria</div>
+      <div class="mls-category-text">${escapeHtml(category.path || category.name || 'N/D')}</div>
+      <div class="mls-divider"></div>
+      <div class="mls-opportunity-section">
+        <span class="mls-opp-title">Oportunidade de Mercado</span>
+        <span class="mls-opportunity-badge" style="background:${oppColor};color:#0D1117">${opportunity.label}</span>
+      </div>
+      <div class="mls-opp-detail">${competition.totalSearch > 0 ? `${formatNumber(competition.totalSearch)} produtos similares nessa categoria` : 'Sem dados de concorrência'}</div>
+      <div class="mls-footer"><span>${data.itemId}</span><button class="mls-refresh-btn" id="mls-refresh">↻ Atualizar</button></div>`;
+  }
+
+  function ensureToggle() {
+    if (document.getElementById('ml-scout-toggle')) return;
+    const btn = document.createElement('div');
+    btn.id = 'ml-scout-toggle'; btn.className = 'ml-scout-toggle';
+    btn.innerHTML = `<span>🔍</span><span class="mls-toggle-label">Scout</span>`;
+    btn.addEventListener('click', onToggleClick);
+    document.body.appendChild(btn);
+  }
+
+  function ensurePanel() {
+    if (document.getElementById('ml-scout-panel')) return;
+    const panel = document.createElement('div');
+    panel.id = 'ml-scout-panel';
+    panel.innerHTML = `<div class="mls-header"><div class="mls-logo"><span class="mls-logo-icon">🔍</span><span class="mls-logo-text">Silkflow Scout</span></div><button class="mls-close-btn" id="mls-close">✕</button></div><div class="mls-loader"><div class="mls-spinner"></div><div class="mls-loading-text">Analisando produto...</div></div>`;
+    document.body.appendChild(panel);
+    panel.querySelector('#mls-close').addEventListener('click', hidePanel);
+  }
+
+  function showPanel() {
+    document.getElementById('ml-scout-panel')?.classList.add('mls-visible');
+    document.getElementById('ml-scout-toggle')?.classList.add('mls-toggle-active');
+  }
+
+  function hidePanel() {
+    document.getElementById('ml-scout-panel')?.classList.remove('mls-visible');
+    document.getElementById('ml-scout-toggle')?.classList.remove('mls-toggle-active');
+  }
+
+  function onToggleClick() {
+    const panel = document.getElementById('ml-scout-panel');
+    if (!panel) return;
+    panel.classList.contains('mls-visible') ? hidePanel() : showPanel();
+  }
+
+  function setLoading() {
+    const panel = document.getElementById('ml-scout-panel');
+    if (!panel) return;
+    panel.innerHTML = `<div class="mls-header"><div class="mls-logo"><span class="mls-logo-icon">🔍</span><span class="mls-logo-text">Silkflow Scout</span></div><button class="mls-close-btn" id="mls-close">✕</button></div><div class="mls-loader"><div class="mls-spinner"></div><div class="mls-loading-text">Analisando produto...</div></div>`;
+    panel.querySelector('#mls-close').addEventListener('click', hidePanel);
+  }
+
+  function setError(message) {
+    const panel = document.getElementById('ml-scout-panel');
+    if (!panel) return;
+    panel.innerHTML = `<div class="mls-header"><div class="mls-logo"><span class="mls-logo-icon">🔍</span><span class="mls-logo-text">Silkflow Scout</span></div><button class="mls-close-btn" id="mls-close">✕</button></div><div class="mls-error"><div class="mls-error-icon">⚠️</div><div class="mls-error-msg">${escapeHtml(message)}</div><button class="mls-retry-btn" id="mls-retry">Tentar novamente</button></div>`;
+    panel.querySelector('#mls-close').addEventListener('click', hidePanel);
+    panel.querySelector('#mls-retry').addEventListener('click', () => {
+      if (currentPageInfo) { setLoading(); requestAnalysis(currentPageInfo); }
+    });
+  }
+
+  function setNotAProduct() {
+    const panel = document.getElementById('ml-scout-panel');
+    if (!panel) return;
+    panel.innerHTML = `<div class="mls-header"><div class="mls-logo"><span class="mls-logo-icon">🔍</span><span class="mls-logo-text">Silkflow Scout</span></div><button class="mls-close-btn" id="mls-close">✕</button></div><div class="mls-error"><div class="mls-error-icon">📋</div><div class="mls-error-msg">Nenhum produto detectado nesta página.<br><br>Abra a página de um anúncio específico para ver a análise.</div></div>`;
+    panel.querySelector('#mls-close').addEventListener('click', hidePanel);
+  }
+
+  function renderData(data) {
+    const panel = document.getElementById('ml-scout-panel');
+    if (!panel) return;
+    panel.innerHTML = buildPanelHTML(data);
+    panel.querySelector('#mls-close')?.addEventListener('click', hidePanel);
+    panel.querySelector('#mls-refresh')?.addEventListener('click', () => {
+      if (!currentPageInfo) return;
+      setLoading();
+      chrome.runtime.sendMessage({ type: 'CLEAR_CACHE' }, () => requestAnalysis(currentPageInfo));
+    });
+  }
+
+  function requestAnalysis(pageInfo) {
+    const mod = detectModule();
+    chrome.runtime.sendMessage(
+      { type: 'ANALYZE_PRODUCT', itemId: pageInfo.id, isCatalog: pageInfo.isCatalog,
+        marketplace: pageInfo.marketplace, domData: mod ? mod.extractDomData() : null },
+      (response) => {
+        if (chrome.runtime.lastError) { setError('Extensão desconectada. Recarregue a página (F5).'); return; }
+        if (response?.success) {
+          renderData(response.data);
+          chrome.storage.local.set({ lastAnalysis: { data: response.data, url: location.href, ts: Date.now() } });
+        } else {
+          setError(response?.error || 'Erro ao buscar dados da API.');
+        }
+      }
+    );
+  }
+
+  function startAnalysis() {
+    if (analysisStarted) return;
+    setTimeout(() => {
+      const pageInfo = findProductOnPage();
+      if (!pageInfo) { setNotAProduct(); return; }
+      analysisStarted = true;
+      currentPageInfo = pageInfo;
+      requestAnalysis(pageInfo);
+      showPanel();
+    }, 1200);
+  }
+
+  function observeNavigation() {
+    let lastUrl = location.href;
+    new MutationObserver(() => {
+      if (location.href === lastUrl) return;
+      lastUrl = location.href;
+      analysisStarted = false; currentPageInfo = null;
+      setTimeout(() => {
+        const pageInfo = findProductOnPage();
+        if (pageInfo) {
+          currentPageInfo = pageInfo; analysisStarted = true;
+          ensurePanel(); setLoading(); requestAnalysis(pageInfo); showPanel();
+        } else { ensurePanel(); setNotAProduct(); }
+      }, 1200);
+    }).observe(document.body, { childList: true, subtree: true });
+  }
+
+  function init() {
+    if (!detectModule()) return;
+    ensureToggle(); ensurePanel(); startAnalysis(); observeNavigation();
+  }
+
+  document.readyState === 'loading'
+    ? document.addEventListener('DOMContentLoaded', init)
+    : init();
+})();

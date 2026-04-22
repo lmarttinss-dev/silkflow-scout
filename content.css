@@ -1,0 +1,536 @@
+/* ── ML Scout Panel ─────────────────────────────────────────────────────────── */
+
+#ml-scout-panel {
+  position: fixed;
+  top: 0;
+  right: -360px;
+  width: 340px;
+  height: 100vh;
+  background: #0D1117;
+  color: #E6EDF3;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  z-index: 2147483646;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.6);
+  transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 1px solid #1E2A3A;
+  scrollbar-width: thin;
+  scrollbar-color: #1E2A3A transparent;
+}
+
+#ml-scout-panel::-webkit-scrollbar { width: 4px; }
+#ml-scout-panel::-webkit-scrollbar-thumb { background: #1E2A3A; border-radius: 2px; }
+
+#ml-scout-panel.mls-visible {
+  right: 0;
+}
+
+/* ── Toggle Button ──────────────────────────────────────────────────────────── */
+
+#ml-scout-toggle {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #FFE600;
+  color: #0D1117;
+  font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  padding: 10px 6px;
+  border-radius: 8px 0 0 8px;
+  cursor: pointer;
+  z-index: 2147483645;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow: -2px 0 12px rgba(0,0,0,0.4);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+#ml-scout-toggle:hover {
+  background: #FFF176;
+  padding-right: 10px;
+}
+
+#ml-scout-toggle.mls-toggle-active {
+  background: #1E2A3A;
+  color: #FFE600;
+  border: 1px solid #FFE600;
+  border-right: none;
+}
+
+.mls-toggle-label { font-size: 10px; letter-spacing: 0.5px; }
+
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+
+.mls-header {
+  position: sticky;
+  top: 0;
+  background: #0D1117;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid #1E2A3A;
+  z-index: 10;
+}
+
+.mls-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mls-logo-icon { font-size: 18px; }
+
+.mls-logo-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFE600;
+  letter-spacing: -0.3px;
+}
+
+.mls-close-btn {
+  background: none;
+  border: 1px solid #1E2A3A;
+  color: #8892A4;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.mls-close-btn:hover { background: #1E2A3A; color: #E6EDF3; }
+
+/* ── Loading / Error ────────────────────────────────────────────────────────── */
+
+.mls-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.mls-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #1E2A3A;
+  border-top-color: #FFE600;
+  border-radius: 50%;
+  animation: mls-spin 0.8s linear infinite;
+}
+
+@keyframes mls-spin { to { transform: rotate(360deg); } }
+
+.mls-loading-text { color: #8892A4; font-size: 13px; }
+
+.mls-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  gap: 12px;
+  text-align: center;
+}
+
+.mls-error-icon { font-size: 32px; }
+.mls-error-msg { color: #8892A4; line-height: 1.5; }
+
+.mls-retry-btn, .mls-refresh-btn {
+  background: #1E2A3A;
+  color: #FFE600;
+  border: 1px solid #FFE600;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.mls-retry-btn:hover, .mls-refresh-btn:hover {
+  background: #FFE600;
+  color: #0D1117;
+}
+
+/* ── Partial Data Banner ─────────────────────────────────────────────────────── */
+
+.mls-partial-banner {
+  background: rgba(255, 109, 0, 0.12);
+  border-left: 3px solid #FF6D00;
+  color: #FF6D00;
+  font-size: 11px;
+  padding: 6px 16px;
+  line-height: 1.4;
+}
+
+/* ── Product Info ────────────────────────────────────────────────────────────── */
+
+.mls-product-title {
+  padding: 14px 16px 6px;
+  font-size: 13px;
+  color: #B1BAC4;
+  line-height: 1.4;
+  cursor: default;
+}
+
+.mls-price-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 16px 14px;
+  padding: 5px 12px;
+  background: #161B22;
+  border-radius: 20px;
+  border: 1px solid #21262D;
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFE600;
+}
+
+.mls-condition {
+  font-size: 10px;
+  font-weight: 500;
+  color: #8892A4;
+  background: #1E2A3A;
+  padding: 2px 6px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Score Section ──────────────────────────────────────────────────────────── */
+
+.mls-score-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 14px;
+}
+
+.mls-score-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.mls-score-svg { display: block; }
+
+.mls-score-label {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mls-subscores {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mls-subscore-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mls-subscore-label {
+  font-size: 10px;
+  color: #8892A4;
+  width: 76px;
+  flex-shrink: 0;
+}
+
+.mls-subscore-track {
+  flex: 1;
+  height: 5px;
+  background: #1E2A3A;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.mls-subscore-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.mls-subscore-value {
+  font-size: 10px;
+  font-weight: 600;
+  width: 22px;
+  text-align: right;
+}
+
+/* ── Divider ────────────────────────────────────────────────────────────────── */
+
+.mls-divider {
+  height: 1px;
+  background: #1E2A3A;
+  margin: 4px 16px;
+}
+
+/* ── Section Title ──────────────────────────────────────────────────────────── */
+
+.mls-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #8892A4;
+  padding: 10px 16px 6px;
+}
+
+/* ── Metrics Grid ────────────────────────────────────────────────────────────── */
+
+.mls-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 6px 16px 10px;
+}
+
+.mls-metric-card {
+  background: #161B22;
+  border: 1px solid #21262D;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+}
+
+.mls-metric-icon { font-size: 16px; margin-bottom: 4px; }
+
+.mls-metric-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #E6EDF3;
+  margin-bottom: 3px;
+  line-height: 1.2;
+}
+
+.mls-metric-label {
+  font-size: 10px;
+  color: #8892A4;
+  line-height: 1.2;
+}
+
+/* ── Stars ──────────────────────────────────────────────────────────────────── */
+
+.mls-stars-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px 10px;
+}
+
+.mls-stars { color: #FFD600; font-size: 14px; letter-spacing: 1px; }
+.mls-rating-num { color: #8892A4; font-size: 12px; }
+
+/* ── Price Positioning ──────────────────────────────────────────────────────── */
+
+.mls-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 16px 8px;
+}
+
+.mls-price-pos {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mls-price-pos.mls-low { color: #00C853; }
+.mls-price-pos.mls-mid { color: #FFD600; }
+.mls-price-pos.mls-high-price { color: #FF6D00; }
+
+.mls-price-range { font-size: 10px; color: #8892A4; }
+
+.mls-price-bar-wrapper { padding: 0 16px 10px; }
+
+.mls-price-bar {
+  position: relative;
+  height: 6px;
+  background: #1E2A3A;
+  border-radius: 3px;
+  margin-bottom: 4px;
+  overflow: visible;
+}
+
+.mls-price-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00C853, #FFD600, #FF6D00);
+  border-radius: 3px;
+}
+
+.mls-price-bar-marker {
+  position: absolute;
+  top: -5px;
+  transform: translateX(-50%);
+  color: #E6EDF3;
+  font-size: 10px;
+}
+
+.mls-price-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #8892A4;
+  margin-top: 2px;
+}
+
+/* ── Seller Card ─────────────────────────────────────────────────────────────── */
+
+.mls-seller-card {
+  margin: 4px 16px 10px;
+  background: #161B22;
+  border: 1px solid #21262D;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mls-seller-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #E6EDF3;
+}
+
+.mls-power-seller {
+  font-size: 10px;
+  color: #FFD600;
+  font-weight: 600;
+  background: rgba(255, 214, 0, 0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.mls-seller-rep {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #8892A4;
+}
+
+.mls-rep-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mls-seller-rep strong { color: #E6EDF3; }
+
+.mls-seller-sales {
+  font-size: 11px;
+  color: #8892A4;
+}
+
+/* ── Category ────────────────────────────────────────────────────────────────── */
+
+.mls-category-text {
+  padding: 4px 16px 10px;
+  font-size: 11px;
+  color: #8892A4;
+  line-height: 1.5;
+}
+
+/* ── Opportunity ─────────────────────────────────────────────────────────────── */
+
+.mls-opportunity-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 6px;
+}
+
+.mls-opp-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #E6EDF3;
+}
+
+.mls-opportunity-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  color: #0D1117;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mls-opp-detail {
+  padding: 0 16px 14px;
+  font-size: 11px;
+  color: #8892A4;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────────── */
+
+.mls-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 20px;
+  border-top: 1px solid #1E2A3A;
+  margin-top: 8px;
+  font-size: 10px;
+  color: #8892A4;
+}
+
+/* ── Search Badges ───────────────────────────────────────────────────────────── */
+
+.mls-search-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 230, 0, 0.15);
+  border: 1px solid rgba(255, 230, 0, 0.3);
+  color: #FFE600;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: all 0.15s;
+  margin-bottom: 4px;
+  z-index: 100;
+  position: relative;
+}
+
+.mls-search-badge:hover {
+  background: rgba(255, 230, 0, 0.3);
+}
+
+.mls-badge-text { pointer-events: none; }
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────────── */
+
+#ml-scout-panel * {
+  box-sizing: border-box;
+}

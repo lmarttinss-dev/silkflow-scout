@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "Silkflow Scout",
+  "version": "1.0.0",
+  "description": "Valide produtos em Mercado Livre, Shopee e Amazon com métricas de demanda, concorrência e oportunidade de importação.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.mercadolivre.com.br/*",
+        "https://produto.mercadolivre.com.br/*",
+        "https://lista.mercadolivre.com.br/*",
+        "https://www.mercadolibre.com.ar/*",
+        "https://www.mercadolibre.com.mx/*",
+        "https://www.mercadolibre.com.co/*",
+        "https://shopee.com.br/*",
+        "https://www.amazon.com.br/*",
+        "https://www.amazon.com/*"
+      ],
+      "js": [
+        "marketplaces/mercadolivre.js",
+        "marketplaces/shopee.js",
+        "marketplaces/amazon.js",
+        "content.js"
+      ],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://api.mercadolibre.com/*",
+    "https://www.mercadolivre.com.br/*",
+    "https://produto.mercadolivre.com.br/*",
+    "https://lista.mercadolivre.com.br/*",
+    "https://shopee.com.br/*",
+    "https://www.amazon.com.br/*",
+    "https://www.amazon.com/*"
+  ]
+}

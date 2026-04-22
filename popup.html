@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ML Scout</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+
+    <!-- Header -->
+    <div class="popup-header">
+      <div class="popup-logo">
+        <span class="popup-logo-icon">🔍</span>
+        <div>
+          <div class="popup-title">ML Scout</div>
+          <div class="popup-subtitle">Análise Mercado Livre</div>
+        </div>
+      </div>
+      <div class="popup-version">v1.0</div>
+    </div>
+
+    <!-- Status -->
+    <div class="popup-status-card" id="status-card">
+      <div class="status-indicator" id="status-indicator"></div>
+      <div class="status-text" id="status-text">Verificando página...</div>
+    </div>
+
+    <!-- Last Analysis -->
+    <div class="popup-section" id="last-analysis-section" style="display:none">
+      <div class="popup-section-title">Última análise</div>
+      <div class="last-analysis-card" id="last-analysis-card">
+        <div class="la-title" id="la-title"></div>
+        <div class="la-meta">
+          <div class="la-score" id="la-score"></div>
+          <div class="la-price" id="la-price"></div>
+        </div>
+        <div class="la-time" id="la-time"></div>
+        <a class="la-open-btn" id="la-open" href="#" target="_blank">Abrir análise ↗</a>
+      </div>
+    </div>
+
+    <!-- Quick Search -->
+    <div class="popup-section">
+      <div class="popup-section-title">Busca rápida</div>
+      <div class="search-row">
+        <input
+          type="text"
+          class="popup-search-input"
+          id="popup-search"
+          placeholder="Pesquisar produto no ML..."
+          maxlength="100"
+        />
+        <button class="popup-search-btn" id="popup-search-btn">→</button>
+      </div>
+      <div class="search-results" id="search-results"></div>
+    </div>
+
+    <!-- Settings -->
+    <div class="popup-section">
+      <div class="popup-section-title">Configurações</div>
+      <div class="settings-list">
+        <label class="setting-row">
+          <span class="setting-label">Painel automático em produtos</span>
+          <input type="checkbox" class="toggle-input" id="setting-auto-panel" checked>
+          <span class="toggle-slider"></span>
+        </label>
+        <label class="setting-row">
+          <span class="setting-label">Badges nas buscas</span>
+          <input type="checkbox" class="toggle-input" id="setting-search-badges" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="popup-footer">
+      <span>Dados via API oficial ML</span>
+      <button class="clear-cache-btn" id="clear-cache">Limpar cache</button>
+    </div>
+
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
