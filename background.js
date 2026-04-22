@@ -250,7 +250,11 @@ const IMPORT_RULES = [
   {
     agency: 'ANATEL',
     reason: 'Equipamentos com rádio ou telecomunicação exigem certificação',
-    pattern: /celular|smartphone|tablet|notebook|computador|roteador|modem|wi-fi|wifi|bluetooth|drone|câmera\s*ip|gps|walkie|radio|antena|tv\s|televisão|monitor|console|videogame|fone|headset|caixa\s*de\s*som|speaker/i
+    // "celular" removido — aparece como modificador em acessórios ("suporte para celular",
+    // "carregador celular") causando falsos positivos; títulos de aparelhos reais incluem
+    // "smartphone" ou nome de modelo. Termos genéricos como "bluetooth" e "fone" também
+    // removidos pois aparecem em acessórios passivos que não precisam de certificação.
+    pattern: /smartphone|tablet|notebook|roteador|modem|wi-fi\s*\d|modem\s*4g|modem\s*5g|drone|câmera\s*ip|walkie[-\s]talkie|rádio\s*comunicador|televisão|monitor\s*\d|console\s*de\s*jogo|videogame/i
   },
   {
     agency: 'ANVISA',
