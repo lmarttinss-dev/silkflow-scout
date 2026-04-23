@@ -13,6 +13,7 @@ Parte do ecossistema [Silkflow](https://github.com/lmarttinss-dev) — plataform
 - **Posicionamento de preço** com barra visual em relação aos concorrentes
 - **Estimativa de vendas mensais** baseada em `sold_quantity` e tempo do anúncio
 - **Reputação do vendedor** com nível MercadoLíder e histórico de vendas
+- **Comparativo automático de preço** — mostra o preço-alvo de compra na China (em U$ e R$) para margens de 10%, 20% e 30%, calculado automaticamente
 - **Buscar no 1688** — abre o 1688.com com o título traduzido para mandarim
 - **Buscar no Alibaba** — abre o Alibaba.com com o título em inglês filtrando por Trade Assurance
 - **Buscar por Imagem** — abre o Google Lens com a thumbnail do produto para correspondência visual exata

@@ -15,6 +15,7 @@
   - [Interpretação](#interpretação)
 - [Demanda do nicho](#demanda-do-nicho)
 - [Simulador de Margem](#simulador-de-margem)
+- [Comparativo de Preço](#comparativo-de-preço)
 - [Buscar Fornecedor](#buscar-fornecedor)
 - [Elegibilidade de importação](#elegibilidade-de-importação)
   - [Mapa por ID de categoria](#mapa-por-id-de-categoria-prioritário)
@@ -211,6 +212,31 @@ A alíquota é determinada automaticamente pela elegibilidade de importação. A
 | Margem bruta | Excelente spread de importação | Margem razoável | Importação arriscada |
 | Margem líquida | Operação saudável | Margem apertada | Prejuízo provável |
 | ROI | Alto retorno | Retorno moderado | Retorno baixo |
+
+## Comparativo de Preço
+
+Card automático que mostra o preço-alvo de compra na China para três faixas de margem líquida, calculado diretamente do preço do marketplace sem nenhuma entrada do usuário.
+
+**Fórmula (para cada margem alvo M):**
+
+```
+productBRL = (mlPrice × (1 - 0.12 - M) - freteNacional) / (1 + alíquota)
+productUSD = productBRL / 5.70
+```
+
+| Parâmetro | Valor fixo |
+|-----------|-----------|
+| Comissão ML | 12% |
+| Frete nacional | R$ 30 |
+| Câmbio | U$ 1 ≈ R$ 5,70 |
+| Alíquota | Determinada pelo regime de importação do produto |
+
+| Resultado | Cor |
+|-----------|-----|
+| Margem 30% | Verde |
+| Margem 20% | Amarelo |
+| Margem 10% | Laranja |
+| Inviável (productUSD ≤ 0) | Vermelho |
 
 ## Buscar Fornecedor
 

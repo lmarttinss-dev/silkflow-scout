@@ -119,6 +119,60 @@
       </div>`;
   }
 
+  function renderPriceComparison(data) {
+    if (!data.price || data.price <= 0) return '';
+    const USD_RATE = 5.7, ML_FEE = 0.12, DEFAULT_SHIPPING = 30;
+    const mlPrice = data.price;
+    const currency = data.currencyId || 'BRL';
+    const taxRate = data.importEligibility?.regime?.taxFree ? 0
+                  : (data.importEligibility?.regime?.tax ?? 20) / 100;
+    const regimeLabel = data.importEligibility?.regime?.taxFree
+      ? '0% (Remessa Conforme)'
+      : `${Math.round(taxRate * 100)}%`;
+
+    function targetUSD(margin) {
+      const productBRL = (mlPrice * (1 - ML_FEE - margin) - DEFAULT_SHIPPING) / (1 + taxRate);
+      return { brl: productBRL, usd: productBRL / USD_RATE };
+    }
+
+    const tiers = [
+      { label: 'Margem 30%', margin: 0.30, color: '#00C853' },
+      { label: 'Margem 20%', margin: 0.20, color: '#FFD600' },
+      { label: 'Margem 10%', margin: 0.10, color: '#FF6D00' },
+    ];
+
+    const rows = tiers.map(({ label, margin, color }) => {
+      const { brl, usd } = targetUSD(margin);
+      if (usd <= 0) return `
+        <div class="mls-pcomp-row">
+          <span class="mls-pcomp-tier" style="color:${color}">${label}</span>
+          <span class="mls-pcomp-inviavel">Inviável</span>
+        </div>`;
+      return `
+        <div class="mls-pcomp-row">
+          <span class="mls-pcomp-tier" style="color:${color}">${label}</span>
+          <div class="mls-pcomp-values">
+            <span class="mls-pcomp-usd">≤ U$ ${usd.toFixed(2)}</span>
+            <span class="mls-pcomp-brl">${formatCurrency(brl, 'BRL')}</span>
+          </div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="mls-divider"></div>
+      <div class="mls-section-title">Comparativo de Preço</div>
+      <div class="mls-pcomp-card">
+        <div class="mls-pcomp-header">
+          <span class="mls-pcomp-header-label">Preço no marketplace</span>
+          <span class="mls-pcomp-header-price">${formatCurrency(mlPrice, currency)}</span>
+        </div>
+        <div class="mls-pcomp-separator"></div>
+        <div class="mls-pcomp-subtitle">Preço máximo de compra na China</div>
+        ${rows}
+        <div class="mls-pcomp-footnote">Frete nac. R$ 30 · Comissão 12% · Câmbio U$ 1 ≈ R$ 5,70 · Imposto ${regimeLabel}</div>
+      </div>`;
+  }
+
   function renderCostCalculator(data) {
     const taxRate = data.importEligibility?.regime?.taxFree ? 0
                   : (data.importEligibility?.regime?.tax ?? 20);
@@ -388,6 +442,7 @@
         <div class="mls-niche-sub">média de ${formatNumber(competition.nicheDemand.avg)} por anúncio · amostra de ${competition.nicheDemand.sampleSize} produtos</div>
       </div>` : ''}
       ${renderImportEligibility(data.importEligibility)}
+      ${renderPriceComparison(data)}
       ${renderCostCalculator(data)}
       ${renderSupplierSection(data.thumbnail)}
       <div class="mls-footer"><span>${data.itemId}</span><button class="mls-refresh-btn" id="mls-refresh">↻ Atualizar</button></div>`;
