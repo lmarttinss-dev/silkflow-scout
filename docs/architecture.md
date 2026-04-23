@@ -14,8 +14,6 @@
   - [Tabela de Demanda](#tabela-de-demanda)
   - [Interpretação](#interpretação)
 - [Demanda do nicho](#demanda-do-nicho)
-- [Simulador de Margem](#simulador-de-margem)
-- [Comparativo de Preço](#comparativo-de-preço)
 - [Buscar Fornecedor](#buscar-fornecedor)
 - [Regimes de importação](#regimes-de-importação)
   - [Detecção automática do regime](#detecção-automática-do-regime)
@@ -120,7 +118,11 @@ Quando a API retorna 403, `background.js` tenta três caminhos em sequência:
 2. Busca por título via DOM: `GET /sites/MLB/search?q={título}`
 3. Item sintético construído 100% a partir dos dados do DOM (`_fromDom: true`)
 
-Quando `item._fromDom === true`, as chamadas de vendedor/categoria/reviews são puladas e o painel exibe um banner de dados parciais.
+Quando `item._fromDom === true`, as chamadas de vendedor/categoria/reviews são puladas e o painel exibe um banner de dados parciais. Rating e reviewCount ainda são lidos do DOM e usados no score.
+
+**Extração de preço com desconto:** o seletor DOM prioriza `.ui-pdp-price__second-line` (preço final após desconto) em vez do primeiro `.andes-money-amount__fraction` da página, que pode ser o preço cheio riscado.
+
+**Estimativa mensal de vendas:** `sold_quantity ÷ meses desde criação`. Em modo DOM, `date_created` é nulo — neste caso o divisor fixo é 12 meses para evitar resultado próximo de zero.
 
 ## Endpoints da API
 
@@ -148,10 +150,11 @@ API externa (sem autenticação):
 
 | Dimensão     | Peso | Fonte |
 |--------------|------|-------|
-| Demanda      | 35%  | `sold_quantity` + total de avaliações |
-| Oportunidade | 25%  | Nº de vendedores do mesmo item + concorrência total |
-| Qualidade    | 20%  | `rating_average` + volume de reviews |
-| Vendedor     | 20%  | Nível de reputação + power seller status |
+| Demanda      | 40%  | `sold_quantity` + total de avaliações |
+| Oportunidade | 35%  | Nº de vendedores do mesmo item + concorrência total |
+| Qualidade    | 25%  | `rating_average` + volume de reviews |
+
+A dimensão Vendedor foi removida pois a reputação do vendedor atual não é relevante para a decisão de entrar no mercado como novo revendedor.
 
 ### Tabela de Demanda
 
@@ -185,62 +188,6 @@ A função `getNicheDemand(competition)` em `background.js` aproveita o campo `s
 
 O resultado é exposto em `competition.nicheDemand` e exibido no painel abaixo da seção de oportunidade. Por ser uma amostra dos top 50 resultados de busca, o total representa um piso conservador do volume do nicho — não o mercado completo.
 
-## Simulador de Margem
-
-Permite calcular viabilidade financeira diretamente no painel, comparando o custo de importação da China com o preço atual do produto no marketplace.
-
-**Fórmulas:**
-
-```
-Produto (BRL)      = Preço China (U$) × 5,70
-Imposto importação = Produto (BRL) × alíquota do regime
-Custo de importação = Produto + Imposto
-
-Margem bruta       = Preço ML − Custo de importação
-Margem líquida     = Preço ML − Custo de importação − Tarifa ML Full − Comissão ML (12%)
-ROI                = Margem líquida / (Custo de importação + Tarifa ML Full) × 100%
-```
-
-| Regime                  | Faixa (U$)    | Imposto  |
-|-------------------------|---------------|----------|
-| Importação Simplificada | Até 3.000     | 20%      |
-| Importação Formal       | Acima de 3.000 | Variável |
-
-A alíquota é determinada automaticamente pela elegibilidade de importação. A cotação U$ 1 ≈ R$ 5,70 é estática e serve apenas como referência visual.
-
-**Interpretação das margens:**
-
-| Resultado | Verde (≥30%) | Amarelo (≥15%) | Laranja (<15%) |
-|-----------|-------------|----------------|----------------|
-| Margem bruta | Excelente spread de importação | Margem razoável | Importação arriscada |
-| Margem líquida | Operação saudável | Margem apertada | Prejuízo provável |
-| ROI | Alto retorno | Retorno moderado | Retorno baixo |
-
-## Comparativo de Preço
-
-Card automático que mostra o preço-alvo de compra na China para três faixas de margem líquida, calculado diretamente do preço do marketplace sem nenhuma entrada do usuário.
-
-**Fórmula (para cada margem alvo M):**
-
-```
-productBRL = (mlPrice × (1 - 0.12 - M) - tarifaMLFull) / (1 + alíquota)
-productUSD = productBRL / 5.70
-```
-
-| Parâmetro | Valor padrão |
-|-----------|-------------|
-| Comissão ML | 12% |
-| Tarifa ML Full | R$ 12 (itens pequenos; editável no Simulador) |
-| Câmbio | U$ 1 ≈ R$ 5,70 |
-| Alíquota | Determinada pelo regime de importação do produto |
-
-| Resultado | Cor |
-|-----------|-----|
-| Margem 30% | Verde |
-| Margem 20% | Amarelo |
-| Margem 10% | Laranja |
-| Inviável (productUSD ≤ 0) | Vermelho |
-
 ## Buscar Fornecedor
 
 Dois botões no painel que abrem plataformas de fornecedores chineses com o título do produto traduzido automaticamente.
@@ -248,7 +195,7 @@ Dois botões no painel que abrem plataformas de fornecedores chineses com o tít
 | Botão | Método | URL de destino | Observação |
 |-------|--------|----------------|------------|
 | 1688 | Tradução (Mandarim) | `s.1688.com/selloffer/offer_search.htm?keywords=` | — |
-| Alibaba | Tradução (Inglês) | `alibaba.com/trade/search?SearchText=&fsb=y&IndexArea=product_en` | Trade Assurance ativo |
+| Alibaba | Tradução (Inglês) | `alibaba.com/trade/search?fsb=y&IndexArea=product_en&keywords=&originKeywords=&ta=y` | `ta=y` ativa o filtro Trade Assurance |
 | Buscar por Imagem | Thumbnail do produto | `lens.google.com/uploadbyurl?url=` | Mais assertivo; desabilitado se sem thumbnail |
 
 **Fluxo — botões de texto (1688 e Alibaba):**

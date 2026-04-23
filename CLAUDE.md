@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-A Chrome extension (Manifest V3) that analyzes products on Mercado Livre, Shopee, and Amazon. It calculates a 0–100 score based on demand, opportunity, quality, and seller reputation, displayed in a slide-in panel injected into the marketplace page.
+A Chrome extension (Manifest V3) that analyzes products on Mercado Livre, Shopee, and Amazon. It calculates a 0–100 score based on demand, opportunity, and quality, displayed in a slide-in panel injected into the marketplace page.
 
 ## How to load and test
 
@@ -63,10 +63,9 @@ When `item._fromDom === true`, `analyzeProduct()` skips API calls for seller/cat
 
 | Dimension | Weight | Source |
 |---|---|---|
-| Demand | 35% | `sold_quantity` + review count |
-| Opportunity | 25% | Same-item seller count + total category competition |
-| Quality | 20% | `rating_average` + volume of reviews |
-| Seller | 20% | `seller_reputation.level_id` + `power_seller_status` |
+| Demand | 40% | `sold_quantity` + review count |
+| Opportunity | 35% | Same-item seller count + total category competition |
+| Quality | 25% | `rating_average` + volume of reviews |
 
 ### Key identifiers
 

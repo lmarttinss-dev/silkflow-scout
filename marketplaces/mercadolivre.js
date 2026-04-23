@@ -68,15 +68,22 @@ const MercadoLivre = (() => {
                 || document.querySelector('meta[property="og:title"]')?.content
                 || document.title.split('|')[0].trim();
 
-      const frac  = document.querySelector('.andes-money-amount__fraction, .price-tag-fraction');
-      const cents = document.querySelector('.andes-money-amount__cents, .price-tag-cents');
+      // Preço com desconto (segunda linha) tem prioridade sobre o preço cheio riscado
+      const priceContainer = document.querySelector('.ui-pdp-price__second-line, .ui-pdp-price--andes')
+        || [...document.querySelectorAll('.andes-money-amount')]
+             .find(el => !el.closest('s') && !el.classList.contains('ui-pdp-price--original'));
+      const frac  = priceContainer?.querySelector('.andes-money-amount__fraction')
+                 || document.querySelector('.price-tag-fraction');
+      const cents = priceContainer?.querySelector('.andes-money-amount__cents')
+                 || document.querySelector('.price-tag-cents');
       if (frac) {
         const intPart  = frac.textContent.replace(/\./g, '').trim();
         const centPart = cents ? cents.textContent.replace(',', '.').trim() : '00';
         d.price = parseFloat(`${intPart}.${centPart}`) || 0;
       }
 
-      const sym = document.querySelector('.andes-money-amount__currency-symbol, .price-tag-symbol')?.textContent?.trim();
+      const sym = priceContainer?.querySelector('.andes-money-amount__currency-symbol')?.textContent?.trim()
+               || document.querySelector('.price-tag-symbol')?.textContent?.trim();
       if (sym === 'US$') d.currency = 'USD';
 
       const subtitle = document.querySelector('.ui-pdp-subtitle')?.textContent?.toLowerCase() || '';

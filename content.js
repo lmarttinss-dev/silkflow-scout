@@ -119,201 +119,6 @@
       </div>`;
   }
 
-  function renderPriceComparison(data) {
-    if (!data.price || data.price <= 0) return '';
-    const USD_RATE = 5.7, ML_FEE = 0.12, DEFAULT_SHIPPING = 12;
-    const mlPrice = data.price;
-    const currency = data.currencyId || 'BRL';
-    const taxRate = data.importEligibility?.regime?.taxFree ? 0
-                  : (data.importEligibility?.regime?.tax ?? 20) / 100;
-    const regimeLabel = data.importEligibility?.regime?.taxFree
-      ? '0% (Remessa Conforme)'
-      : `${Math.round(taxRate * 100)}%`;
-
-    function targetUSD(margin) {
-      const productBRL = (mlPrice * (1 - ML_FEE - margin) - DEFAULT_SHIPPING) / (1 + taxRate);
-      return { brl: productBRL, usd: productBRL / USD_RATE };
-    }
-
-    const tiers = [
-      { label: 'Margem 30%', margin: 0.30, color: '#00C853' },
-      { label: 'Margem 20%', margin: 0.20, color: '#FFD600' },
-      { label: 'Margem 10%', margin: 0.10, color: '#FF6D00' },
-    ];
-
-    const results = tiers.map(({ label, margin, color }) => {
-      const { brl, usd } = targetUSD(margin);
-      return { label, margin, color, brl, usd };
-    });
-
-    const allInviavel = results.every(r => r.usd <= 0);
-    const minPrice = DEFAULT_SHIPPING / (1 - ML_FEE - 0.10);
-
-    const rows = results.map(({ label, color, brl, usd }) => {
-      if (usd <= 0) return `
-        <div class="mls-pcomp-row">
-          <span class="mls-pcomp-tier" style="color:${color}">${label}</span>
-          <span class="mls-pcomp-inviavel">Inviável</span>
-        </div>`;
-      return `
-        <div class="mls-pcomp-row">
-          <span class="mls-pcomp-tier" style="color:${color}">${label}</span>
-          <div class="mls-pcomp-values">
-            <span class="mls-pcomp-usd">≤ U$ ${usd.toFixed(2)}</span>
-            <span class="mls-pcomp-brl">${formatCurrency(brl, 'BRL')}</span>
-          </div>
-        </div>`;
-    }).join('');
-
-    const inviravelNote = allInviavel
-      ? `<div class="mls-pcomp-inviavel-note">Preço abaixo do mínimo viável. Necessário pelo menos ${formatCurrency(minPrice, 'BRL')} para cobrir tarifa ML Full e comissão.</div>`
-      : '';
-
-    return `
-      <div class="mls-divider"></div>
-      <div class="mls-section-title">Comparativo de Preço</div>
-      <div class="mls-pcomp-card">
-        <div class="mls-pcomp-header">
-          <span class="mls-pcomp-header-label">Preço no marketplace</span>
-          <span class="mls-pcomp-header-price">${formatCurrency(mlPrice, currency)}</span>
-        </div>
-        <div class="mls-pcomp-separator"></div>
-        <div class="mls-pcomp-subtitle">Preço máximo de compra na China</div>
-        ${rows}
-        ${inviravelNote}
-        <div class="mls-pcomp-footnote">Tarifa ML Full ~R$ 12 · Comissão 12% · Câmbio U$ 1 ≈ R$ 5,70 · Imposto ${regimeLabel}</div>
-      </div>`;
-  }
-
-  function renderCostCalculator(data) {
-    const taxRate = data.importEligibility?.regime?.taxFree ? 0
-                  : (data.importEligibility?.regime?.tax ?? 20);
-    return `
-      <div class="mls-divider"></div>
-      <div class="mls-section-title">Simulador de Margem</div>
-      <div class="mls-calc-card">
-        <div class="mls-calc-input-row">
-          <label class="mls-calc-label" for="mls-china-price">Preço China (U$)</label>
-          <input class="mls-calc-input" id="mls-china-price" type="number" min="0" step="0.01" placeholder="0,00">
-        </div>
-        <div class="mls-calc-input-row">
-          <label class="mls-calc-label" for="mls-shipping">Tarifa ML Full (R$)</label>
-          <input class="mls-calc-input" id="mls-shipping" type="number" min="0" step="1" value="12">
-        </div>
-        <div class="mls-calc-result" id="mls-calc-result" style="display:none">
-          <div class="mls-calc-row"><span>Produto (BRL)</span><span id="cr-product">—</span></div>
-          <div class="mls-calc-row mls-calc-tax" id="cr-tax-row"><span>Imposto import. (${taxRate}%)</span><span id="cr-tax">—</span></div>
-          <div class="mls-calc-row mls-calc-subtotal"><span>Custo de importação</span><span id="cr-import-cost">—</span></div>
-          <div class="mls-calc-divider"></div>
-          <div class="mls-calc-row"><span>Tarifa ML Full</span><span id="cr-shipping">—</span></div>
-          <div class="mls-calc-row"><span>Comissão ML (~12%)</span><span id="cr-commission">—</span></div>
-          <div class="mls-calc-divider"></div>
-          <div class="mls-calc-margin-block">
-            <div class="mls-calc-margin-item">
-              <div class="mls-calc-margin-header">
-                <span class="mls-calc-margin-label">Margem bruta</span>
-                <span class="mls-calc-margin-hint">sem frete e comissão</span>
-              </div>
-              <div class="mls-calc-margin-values">
-                <span id="cr-gross-margin">—</span>
-                <span class="mls-calc-margin-pct" id="cr-gross-pct">—</span>
-              </div>
-              <div class="mls-calc-margin-bar"><div class="mls-calc-margin-fill" id="cr-gross-fill"></div></div>
-            </div>
-            <div class="mls-calc-margin-item">
-              <div class="mls-calc-margin-header">
-                <span class="mls-calc-margin-label">Margem líquida</span>
-                <span class="mls-calc-margin-hint">após todos os custos</span>
-              </div>
-              <div class="mls-calc-margin-values">
-                <span id="cr-net-margin">—</span>
-                <span class="mls-calc-margin-pct" id="cr-net-pct">—</span>
-              </div>
-              <div class="mls-calc-margin-bar"><div class="mls-calc-margin-fill" id="cr-net-fill"></div></div>
-            </div>
-            <div class="mls-calc-roi-row">
-              <span>ROI estimado</span>
-              <span id="cr-roi">—</span>
-            </div>
-          </div>
-        </div>
-        <div class="mls-calc-footnote" id="mls-calc-empty">Informe o preço de compra na China para calcular.</div>
-      </div>`;
-  }
-
-  function initCalculator(data) {
-    const USD_RATE  = 5.7;
-    const ML_FEE    = 0.12;
-    const mlPrice   = data.price || 0;
-    const taxRate   = data.importEligibility?.regime?.taxFree ? 0
-                    : (data.importEligibility?.regime?.tax ?? 20) / 100;
-
-    function marginColor(pct) {
-      return pct >= 30 ? '#00C853' : pct >= 15 ? '#FFD600' : '#FF6D00';
-    }
-
-    function setMarginEl(valueId, pctId, fillId, value, pct) {
-      const valueEl = document.getElementById(valueId);
-      const pctEl   = document.getElementById(pctId);
-      const fillEl  = document.getElementById(fillId);
-      const color   = marginColor(pct);
-      const fillPct = Math.max(0, Math.min(100, pct));
-      if (valueEl) { valueEl.textContent = formatCurrency(value, 'BRL'); valueEl.style.color = color; }
-      if (pctEl)   { pctEl.textContent = `${pct.toFixed(1)}%`; pctEl.style.color = color; }
-      if (fillEl)  { fillEl.style.width = `${fillPct}%`; fillEl.style.background = color; }
-    }
-
-    function recalc() {
-      const chinaUSD = parseFloat(document.getElementById('mls-china-price')?.value) || 0;
-      const shipping = parseFloat(document.getElementById('mls-shipping')?.value)    || 0;
-      const result   = document.getElementById('mls-calc-result');
-      const empty    = document.getElementById('mls-calc-empty');
-      if (!result || !empty) return;
-
-      if (chinaUSD <= 0) { result.style.display = 'none'; empty.style.display = 'block'; return; }
-      result.style.display = 'block'; empty.style.display = 'none';
-
-      const productBRL  = chinaUSD * USD_RATE;
-      const importTax   = productBRL * taxRate;
-      const importCost  = productBRL + importTax;
-      const commission  = mlPrice * ML_FEE;
-
-      const grossMargin = mlPrice - importCost;
-      const grossPct    = mlPrice > 0 ? (grossMargin / mlPrice) * 100 : 0;
-
-      const netMargin   = mlPrice - importCost - shipping - commission;
-      const netPct      = mlPrice > 0 ? (netMargin / mlPrice) * 100 : 0;
-
-      const invested    = importCost + shipping;
-      const roi         = invested > 0 ? (netMargin / invested) * 100 : 0;
-
-      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-      const fmt = v => formatCurrency(v, 'BRL');
-
-      set('cr-product',     fmt(productBRL));
-      set('cr-tax',         fmt(importTax));
-      set('cr-import-cost', fmt(importCost));
-      set('cr-shipping',    fmt(shipping));
-      set('cr-commission',  fmt(commission));
-
-      setMarginEl('cr-gross-margin', 'cr-gross-pct', 'cr-gross-fill', grossMargin, grossPct);
-      setMarginEl('cr-net-margin',   'cr-net-pct',   'cr-net-fill',   netMargin,   netPct);
-
-      const roiEl = document.getElementById('cr-roi');
-      if (roiEl) {
-        roiEl.textContent = `${roi.toFixed(1)}%`;
-        roiEl.style.color = marginColor(roi);
-      }
-
-      const taxRow = document.getElementById('cr-tax-row');
-      if (taxRow) taxRow.style.display = taxRate > 0 ? 'flex' : 'none';
-    }
-
-    document.getElementById('mls-china-price')?.addEventListener('input', recalc);
-    document.getElementById('mls-shipping')?.addEventListener('input', recalc);
-    recalc();
-  }
-
   function renderSupplierSection(thumbnail) {
     const hasImage = !!thumbnail;
     return `
@@ -362,7 +167,7 @@
         btnAlibaba.disabled = true;
         chrome.runtime.sendMessage({ type: 'TRANSLATE_TITLE', title: data.title, targetLang: 'en' }, (response) => {
           const query = response?.translated || data.title;
-          window.open(`https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(query)}&fsb=y&IndexArea=product_en`, '_blank');
+          window.open(`https://www.alibaba.com/trade/search?fsb=y&IndexArea=product_en&keywords=${encodeURIComponent(query)}&originKeywords=${encodeURIComponent(query)}&ta=y`, '_blank');
           btnAlibaba.innerHTML = '<span class="mls-supplier-flag">🌐</span> Alibaba';
           btnAlibaba.disabled = false;
         });
@@ -410,7 +215,6 @@
           ${renderSubScoreBar('Demanda', score.demand)}
           ${renderSubScoreBar('Oportunidade', score.opportunity)}
           ${renderSubScoreBar('Qualidade', score.quality)}
-          ${renderSubScoreBar('Vendedor', score.seller)}
         </div>
       </div>
       <div class="mls-divider"></div>
@@ -454,8 +258,6 @@
         <div class="mls-niche-sub">média de ${formatNumber(competition.nicheDemand.avg)} por anúncio · amostra de ${competition.nicheDemand.sampleSize} produtos</div>
       </div>` : ''}
       ${renderImportEligibility(data.importEligibility)}
-      ${renderPriceComparison(data)}
-      ${renderCostCalculator(data)}
       ${renderSupplierSection(data.thumbnail)}
       <div class="mls-footer"><span>${data.itemId}</span><button class="mls-refresh-btn" id="mls-refresh">↻ Atualizar</button></div>`;
   }
@@ -528,7 +330,6 @@
       setLoading();
       chrome.runtime.sendMessage({ type: 'CLEAR_CACHE' }, () => requestAnalysis(currentPageInfo));
     });
-    initCalculator(data);
     initSupplierButtons(data);
   }
 
