@@ -21,6 +21,7 @@
 - [Adicionando um novo marketplace](#adicionando-um-novo-marketplace)
 - [Convenções de commit](#convenções-de-commit)
 
+
 ## Por que uma extensão?
 
 A API pública do Mercado Livre não expõe tudo que um vendedor precisa para tomar decisões de importação.
@@ -203,6 +204,7 @@ A alíquota é determinada automaticamente pela elegibilidade de importação. A
 | Margem bruta | Excelente spread de importação | Margem razoável | Importação arriscada |
 | Margem líquida | Operação saudável | Margem apertada | Prejuízo provável |
 | ROI | Alto retorno | Retorno moderado | Retorno baixo |
+
 
 ## Elegibilidade de importação
 
