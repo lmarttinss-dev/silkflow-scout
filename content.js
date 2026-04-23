@@ -276,6 +276,14 @@
         <span class="mls-opportunity-badge" style="background:${oppColor};color:#0D1117">${opportunity.label}</span>
       </div>
       <div class="mls-opp-detail">${competition.totalSearch > 0 ? `${formatNumber(competition.totalSearch)} produtos similares nessa categoria` : 'Sem dados de concorrência'}</div>
+      ${competition.nicheDemand ? `
+      <div class="mls-niche-demand">
+        <div class="mls-niche-row">
+          <span class="mls-niche-label">Vendas totais no nicho</span>
+          <span class="mls-niche-total">${formatNumber(competition.nicheDemand.total)}+</span>
+        </div>
+        <div class="mls-niche-sub">média de ${formatNumber(competition.nicheDemand.avg)} por anúncio · amostra de ${competition.nicheDemand.sampleSize} produtos</div>
+      </div>` : ''}
       ${renderImportEligibility(data.importEligibility)}
       ${renderCostCalculator(data)}
       <div class="mls-footer"><span>${data.itemId}</span><button class="mls-refresh-btn" id="mls-refresh">↻ Atualizar</button></div>`;

@@ -484,9 +484,40 @@
 }
 
 .mls-opp-detail {
-  padding: 0 16px 14px;
+  padding: 0 16px 6px;
   font-size: 11px;
   color: #8892A4;
+}
+
+.mls-niche-demand {
+  margin: 6px 16px 14px;
+  background: #161B22;
+  border: 1px solid #21262D;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.mls-niche-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.mls-niche-label {
+  font-size: 11px;
+  color: #8892A4;
+}
+
+.mls-niche-total {
+  font-size: 14px;
+  font-weight: 700;
+  color: #E6EDF3;
+}
+
+.mls-niche-sub {
+  font-size: 10px;
+  color: #586070;
 }
 
 /* ── Footer ──────────────────────────────────────────────────────────────────── */
