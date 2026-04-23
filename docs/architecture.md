@@ -193,8 +193,8 @@ Imposto importação = Produto (BRL) × alíquota do regime
 Custo de importação = Produto + Imposto
 
 Margem bruta       = Preço ML − Custo de importação
-Margem líquida     = Preço ML − Custo de importação − Frete nacional − Comissão ML (12%)
-ROI                = Margem líquida / (Custo de importação + Frete nacional) × 100%
+Margem líquida     = Preço ML − Custo de importação − Tarifa ML Full − Comissão ML (12%)
+ROI                = Margem líquida / (Custo de importação + Tarifa ML Full) × 100%
 ```
 
 | Regime                  | Faixa (U$)    | Imposto  |
@@ -220,14 +220,14 @@ Card automático que mostra o preço-alvo de compra na China para três faixas d
 **Fórmula (para cada margem alvo M):**
 
 ```
-productBRL = (mlPrice × (1 - 0.12 - M) - freteNacional) / (1 + alíquota)
+productBRL = (mlPrice × (1 - 0.12 - M) - tarifaMLFull) / (1 + alíquota)
 productUSD = productBRL / 5.70
 ```
 
-| Parâmetro | Valor fixo |
-|-----------|-----------|
+| Parâmetro | Valor padrão |
+|-----------|-------------|
 | Comissão ML | 12% |
-| Frete nacional | R$ 30 |
+| Tarifa ML Full | R$ 12 (itens pequenos; editável no Simulador) |
 | Câmbio | U$ 1 ≈ R$ 5,70 |
 | Alíquota | Determinada pelo regime de importação do produto |
 

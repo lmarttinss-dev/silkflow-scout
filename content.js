@@ -121,7 +121,7 @@
 
   function renderPriceComparison(data) {
     if (!data.price || data.price <= 0) return '';
-    const USD_RATE = 5.7, ML_FEE = 0.12, DEFAULT_SHIPPING = 30;
+    const USD_RATE = 5.7, ML_FEE = 0.12, DEFAULT_SHIPPING = 12;
     const mlPrice = data.price;
     const currency = data.currencyId || 'BRL';
     const taxRate = data.importEligibility?.regime?.taxFree ? 0
@@ -166,7 +166,7 @@
     }).join('');
 
     const inviravelNote = allInviavel
-      ? `<div class="mls-pcomp-inviavel-note">Preço abaixo do mínimo viável. Necessário pelo menos ${formatCurrency(minPrice, 'BRL')} para cobrir frete e comissão.</div>`
+      ? `<div class="mls-pcomp-inviavel-note">Preço abaixo do mínimo viável. Necessário pelo menos ${formatCurrency(minPrice, 'BRL')} para cobrir tarifa ML Full e comissão.</div>`
       : '';
 
     return `
@@ -181,7 +181,7 @@
         <div class="mls-pcomp-subtitle">Preço máximo de compra na China</div>
         ${rows}
         ${inviravelNote}
-        <div class="mls-pcomp-footnote">Frete nac. R$ 30 · Comissão 12% · Câmbio U$ 1 ≈ R$ 5,70 · Imposto ${regimeLabel}</div>
+        <div class="mls-pcomp-footnote">Tarifa ML Full ~R$ 12 · Comissão 12% · Câmbio U$ 1 ≈ R$ 5,70 · Imposto ${regimeLabel}</div>
       </div>`;
   }
 
@@ -197,15 +197,15 @@
           <input class="mls-calc-input" id="mls-china-price" type="number" min="0" step="0.01" placeholder="0,00">
         </div>
         <div class="mls-calc-input-row">
-          <label class="mls-calc-label" for="mls-shipping">Frete nacional (R$)</label>
-          <input class="mls-calc-input" id="mls-shipping" type="number" min="0" step="1" value="30">
+          <label class="mls-calc-label" for="mls-shipping">Tarifa ML Full (R$)</label>
+          <input class="mls-calc-input" id="mls-shipping" type="number" min="0" step="1" value="12">
         </div>
         <div class="mls-calc-result" id="mls-calc-result" style="display:none">
           <div class="mls-calc-row"><span>Produto (BRL)</span><span id="cr-product">—</span></div>
           <div class="mls-calc-row mls-calc-tax" id="cr-tax-row"><span>Imposto import. (${taxRate}%)</span><span id="cr-tax">—</span></div>
           <div class="mls-calc-row mls-calc-subtotal"><span>Custo de importação</span><span id="cr-import-cost">—</span></div>
           <div class="mls-calc-divider"></div>
-          <div class="mls-calc-row"><span>Frete nacional</span><span id="cr-shipping">—</span></div>
+          <div class="mls-calc-row"><span>Tarifa ML Full</span><span id="cr-shipping">—</span></div>
           <div class="mls-calc-row"><span>Comissão ML (~12%)</span><span id="cr-commission">—</span></div>
           <div class="mls-calc-divider"></div>
           <div class="mls-calc-margin-block">
