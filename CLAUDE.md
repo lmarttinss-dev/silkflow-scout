@@ -108,6 +108,24 @@ docs: update README with modular marketplace structure
 
 Escopo opcional entre parênteses quando a mudança é isolada em um módulo.
 
+## Pull requests
+
+Sempre criar PR com título e descrição. Formato obrigatório:
+
+**Título:** curto e imperativo, seguindo o mesmo padrão dos commits (ex: `feat: add supplier search section`).
+
+**Descrição:**
+```
+## O que muda
+- <bullet com cada mudança relevante>
+
+## Por que
+<motivação ou contexto da mudança>
+
+## Como testar
+- <passos para verificar o comportamento>
+```
+
 ## File roles
 
 | File | Role |
