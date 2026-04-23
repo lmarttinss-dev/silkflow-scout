@@ -45,6 +45,7 @@ function buildSyntheticItem(itemId, domData) {
     currency_id: domData.currency || 'BRL',
     condition: domData.condition === 'used' ? 'used' : 'new',
     sold_quantity: domData.soldEstimate || 0,
+    thumbnail: domData.thumbnail || null,
     available_quantity: null,
     seller_id: null,
     category_id: null,
@@ -489,8 +490,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.type === 'TRANSLATE_TITLE') {
+    const targetLang = message.targetLang || 'zh-CN';
     const q = encodeURIComponent((message.title || '').substring(0, 80));
-    fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t&q=${q}`)
+    fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${q}`)
       .then(r => r.json())
       .then(data => {
         const translated = data?.[0]?.[0]?.[0] || message.title;
