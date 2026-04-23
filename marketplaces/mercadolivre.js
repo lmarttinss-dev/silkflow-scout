@@ -28,6 +28,13 @@ const MercadoLivre = (() => {
     const itemInUrl = url.match(/\/(ML[A-Z]\d{8,})(?=[-._?#]|$)/i);
     if (itemInUrl) return { id: itemInUrl[1], isCatalog: false, marketplace: 'mercadolivre' };
 
+    // URLs publicitárias: /up/MLBUxxx?pdp_filters=item_id:MLBxxxxxxx
+    try {
+      const pdpFilters = new URL(url).searchParams.get('pdp_filters') || '';
+      const adItem = pdpFilters.match(/item_id:(ML[A-Z]\d{8,})/i);
+      if (adItem) return { id: adItem[1], isCatalog: false, marketplace: 'mercadolivre' };
+    } catch { /* URL inválida */ }
+
     for (const sel of ['meta[property="og:url"]', 'link[rel="canonical"]']) {
       const val = document.querySelector(sel)?.getAttribute('content')
                 || document.querySelector(sel)?.getAttribute('href') || '';
