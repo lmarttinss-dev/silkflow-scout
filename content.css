@@ -948,6 +948,17 @@
   font-weight: 600;
 }
 
+.mls-pcomp-inviavel-note {
+  font-size: 10px;
+  color: #FF8F00;
+  line-height: 1.4;
+  margin-top: 4px;
+  padding: 6px 8px;
+  background: rgba(255, 143, 0, 0.08);
+  border-radius: 4px;
+  border-left: 2px solid #FF8F00;
+}
+
 .mls-pcomp-footnote {
   font-size: 9px;
   color: #4A5568;

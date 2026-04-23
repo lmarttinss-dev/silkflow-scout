@@ -141,8 +141,15 @@
       { label: 'Margem 10%', margin: 0.10, color: '#FF6D00' },
     ];
 
-    const rows = tiers.map(({ label, margin, color }) => {
+    const results = tiers.map(({ label, margin, color }) => {
       const { brl, usd } = targetUSD(margin);
+      return { label, margin, color, brl, usd };
+    });
+
+    const allInviavel = results.every(r => r.usd <= 0);
+    const minPrice = DEFAULT_SHIPPING / (1 - ML_FEE - 0.10);
+
+    const rows = results.map(({ label, color, brl, usd }) => {
       if (usd <= 0) return `
         <div class="mls-pcomp-row">
           <span class="mls-pcomp-tier" style="color:${color}">${label}</span>
@@ -158,6 +165,10 @@
         </div>`;
     }).join('');
 
+    const inviravelNote = allInviavel
+      ? `<div class="mls-pcomp-inviavel-note">Preço abaixo do mínimo viável. Necessário pelo menos ${formatCurrency(minPrice, 'BRL')} para cobrir frete e comissão.</div>`
+      : '';
+
     return `
       <div class="mls-divider"></div>
       <div class="mls-section-title">Comparativo de Preço</div>
@@ -169,6 +180,7 @@
         <div class="mls-pcomp-separator"></div>
         <div class="mls-pcomp-subtitle">Preço máximo de compra na China</div>
         ${rows}
+        ${inviravelNote}
         <div class="mls-pcomp-footnote">Frete nac. R$ 30 · Comissão 12% · Câmbio U$ 1 ≈ R$ 5,70 · Imposto ${regimeLabel}</div>
       </div>`;
   }
