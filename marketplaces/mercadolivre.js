@@ -97,6 +97,10 @@ const MercadoLivre = (() => {
       const breadcrumbs = document.querySelectorAll('.andes-breadcrumb__item a');
       d.category = [...breadcrumbs].at(-1)?.textContent?.trim() || '';
 
+      d.thumbnail = document.querySelector('meta[property="og:image"]')?.content
+                 || document.querySelector('img.ui-pdp-image')?.src
+                 || '';
+
       for (const s of document.querySelectorAll('script[type="application/ld+json"]')) {
         try {
           const j    = JSON.parse(s.textContent);
@@ -110,6 +114,9 @@ const MercadoLivre = (() => {
           if (prod.aggregateRating) {
             d.rating      = d.rating      || parseFloat(prod.aggregateRating.ratingValue) || 0;
             d.reviewCount = d.reviewCount || parseInt(prod.aggregateRating.reviewCount)   || 0;
+          }
+          if (!d.thumbnail && prod.image) {
+            d.thumbnail = Array.isArray(prod.image) ? prod.image[0] : prod.image;
           }
         } catch { /* JSON-LD inválido */ }
       }

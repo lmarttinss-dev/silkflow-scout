@@ -45,6 +45,7 @@ function buildSyntheticItem(itemId, domData) {
     currency_id: domData.currency || 'BRL',
     condition: domData.condition === 'used' ? 'used' : 'new',
     sold_quantity: domData.soldEstimate || 0,
+    thumbnail: domData.thumbnail || null,
     available_quantity: null,
     seller_id: null,
     category_id: null,
