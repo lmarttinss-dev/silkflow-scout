@@ -102,14 +102,6 @@ async function analyzeProduct(itemId, isCatalog = false, domData = null) {
 
   const item = await resolveItem(itemId, isCatalog, site, BASE, domData);
 
-  console.log('[Scout] domData recebido:', domData ? { ...domData, title: domData.title?.substring(0, 50) } : null);
-  console.log('[Scout] item resolvido:', {
-    id: item.id,
-    title: item.title?.substring(0, 50),
-    sold_quantity: item.sold_quantity,
-    _fromDom: item._fromDom ?? false,
-    thumbnail: item.thumbnail ? '✓' : '✗',
-  });
 
   // Quando veio do DOM, pula chamadas que precisam de seller_id / category_id
   let seller = null, category = null, reviews = null;
@@ -147,17 +139,6 @@ async function analyzeProduct(itemId, isCatalog = false, domData = null) {
 
   const competition = competitionResult.status === 'fulfilled' ? competitionResult.value : null;
   const sameItem    = sameItemResult.status    === 'fulfilled' ? sameItemResult.value    : null;
-
-  console.log('[Scout] competitionResult.status:', competitionResult.status);
-  console.log('[Scout] competition raw keys:', competition ? Object.keys(competition) : null);
-  console.log('[Scout] competition.results length:', competition?.results?.length);
-  console.log('[Scout] concorrentes (top 5 sold_quantity):',
-    competition?.results?.slice(0, 5).map(r => ({ id: r.id, title: r.title?.substring(0, 30), sold_quantity: r.sold_quantity }))
-  );
-  console.log('[Scout] nicho total paging:', competition?.paging?.total, '| sameItem total:', sameItem?.paging?.total);
-  if (competitionResult.status === 'rejected') {
-    console.log('[Scout] competition error:', competitionResult.reason);
-  }
 
   const score    = calculateScore({ item, seller, reviews, competition, sameItem });
   const analysis = buildAnalysis({ item, seller, category, reviews, competition, sameItem, score });

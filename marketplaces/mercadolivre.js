@@ -93,7 +93,15 @@ const MercadoLivre = (() => {
                         ?.textContent?.match(/(\d[\d.]*)/);
       d.reviewCount = rcMatch ? parseInt(rcMatch[1].replace('.', '')) : 0;
 
-      const soldEl   = document.querySelector('[class*="sold"], [class*="vendidos"]');
+      let soldEl = document.querySelector('[class*="sold"], [class*="vendidos"]');
+      if (!soldEl) {
+        for (const el of document.querySelectorAll('span, p, strong')) {
+          if (el.children.length === 0 && /\+?\d[\d.]*\s*(mil\s+)?vendidos?/i.test(el.textContent)) {
+            soldEl = el;
+            break;
+          }
+        }
+      }
       const soldMatch = soldEl?.textContent?.match(/\+?([\d.]+)\s*(mil)?/i);
       if (soldMatch) {
         d.soldEstimate = soldMatch[2]
