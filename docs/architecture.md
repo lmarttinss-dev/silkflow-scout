@@ -17,6 +17,11 @@
 - [Simulador de Margem](#simulador-de-margem)
 - [Comparativo de Preço](#comparativo-de-preço)
 - [Buscar Fornecedor](#buscar-fornecedor)
+- [Regimes de importação](#regimes-de-importação)
+  - [Detecção automática do regime](#detecção-automática-do-regime)
+  - [Remessa Conforme](#remessa-conforme)
+  - [Importação Simplificada](#importação-simplificada)
+  - [Importação Formal](#importação-formal)
 - [Elegibilidade de importação](#elegibilidade-de-importação)
   - [Mapa por ID de categoria](#mapa-por-id-de-categoria-prioritário)
   - [Fallback por palavras-chave](#fallback-por-palavras-chave-modo-dom)
@@ -261,6 +266,57 @@ Dois botões no painel que abrem plataformas de fornecedores chineses com o tít
 1. Usuário clica em "Buscar por Imagem"
 2. `content.js` abre diretamente `lens.google.com/uploadbyurl?url=<thumbnail>` em nova aba
 3. Se `data.thumbnail` não estiver disponível (modo DOM), o botão aparece desabilitado
+
+## Regimes de importação
+
+> **Regime ≠ Elegibilidade.** O regime determina *quanto* de imposto incide sobre o produto. A elegibilidade determina *se* o produto pode ser importado (exigências de ANVISA, ANATEL, INMETRO ou proibição total). Um produto pode ser elegível mas cair no regime de Importação Formal, ou ser inelegível mesmo no regime de Remessa Conforme.
+
+### Detecção automática do regime
+
+A função `buildImportRegime(priceUSD)` em `background.js` recebe o preço do produto convertido para dólares (`item.price / 5,70`, arredondado) e retorna o regime aplicável:
+
+```js
+function buildImportRegime(priceUSD) {
+  if (priceUSD <= 50)   return { label: 'Remessa Conforme',        taxFree: true,  tax: 0,    maxUSD: 50   };
+  if (priceUSD <= 3000) return { label: 'Importação Simplificada', taxFree: false, tax: 20,   maxUSD: 3000 };
+  return                       { label: 'Importação Formal',       taxFree: false, tax: null, maxUSD: null };
+}
+```
+
+O resultado é exposto em `importEligibility.regime` e consumido pelo Simulador de Margem e pelo Comparativo de Preço para aplicar a alíquota correta automaticamente.
+
+### Remessa Conforme
+
+| Faixa | Alíquota | Observação |
+|-------|----------|------------|
+| ≤ U$ 50 por encomenda | 0% | Isento de II e IPI |
+
+Criado em 2023 para regularizar as importações de plataformas como Shein e Shopee. Válido apenas para **pessoa física comprando para uso próprio** — não se aplica a importações comerciais em volume.
+
+Na extensão: `taxFree: true`, o simulador oculta a linha de imposto e o comparativo usa alíquota 0.
+
+### Importação Simplificada
+
+| Faixa | Alíquota | Base de cálculo |
+|-------|----------|-----------------|
+| U$ 51 – U$ 3.000 por encomenda | 20% fixo (II) | Valor aduaneiro (preço + frete internacional + seguro) |
+
+Modalidade usada pela Receita Federal para encomendas internacionais de valor moderado. Não exige DI (Declaração de Importação) completa — o desembaraço é feito pelo próprio operador logístico (Correios, DHL, etc.).
+
+**Pontos práticos para o importador:**
+- O 20% incide sobre o valor aduaneiro, que pode incluir frete internacional declarado pelo fornecedor
+- ICMS estadual incide adicionalmente (varia por UF, tipicamente 17–25%) mas **não é calculado pela extensão** — o simulador mostra apenas o II de 20%
+- Produtos com regulamentação específica (ANATEL, ANVISA) ainda exigem certificação mesmo neste regime
+
+Na extensão: `tax: 20`, aplicado como `productBRL × 0,20` no simulador e como `(1 + 0,20)` no denominador do comparativo de preço.
+
+### Importação Formal
+
+| Faixa | Alíquota | Base de cálculo |
+|-------|----------|-----------------|
+| > U$ 3.000 | Variável por NCM | Exige Declaração de Importação (DI) e despachante |
+
+A alíquota varia conforme o código NCM do produto (4–35%). A extensão **não calcula** este regime — produtos nesta faixa são sinalizados no painel como "Importação Formal" mas os campos de imposto ficam em branco.
 
 ## Elegibilidade de importação
 
