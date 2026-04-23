@@ -208,6 +208,33 @@
     recalc();
   }
 
+  function renderSupplierSection() {
+    return `
+      <div class="mls-divider"></div>
+      <div class="mls-section-title">Buscar Fornecedor</div>
+      <div class="mls-supplier-section">
+        <button class="mls-supplier-btn" id="mls-search-1688">
+          <span class="mls-supplier-flag">🇨🇳</span> Buscar no 1688
+        </button>
+        <div class="mls-supplier-hint">Abre o 1688.com com o título traduzido para mandarim</div>
+      </div>`;
+  }
+
+  function init1688Button(data) {
+    const btn = document.getElementById('mls-search-1688');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      btn.textContent = 'Traduzindo...';
+      btn.disabled = true;
+      chrome.runtime.sendMessage({ type: 'TRANSLATE_TITLE', title: data.title }, (response) => {
+        const query = response?.translated || data.title;
+        window.open(`https://s.1688.com/selloffer/offer_search.htm?keywords=${encodeURIComponent(query)}`, '_blank');
+        btn.innerHTML = '<span class="mls-supplier-flag">🇨🇳</span> Buscar no 1688';
+        btn.disabled = false;
+      });
+    });
+  }
+
   function buildPanelHTML(data) {
     const { score, seller, reviews, competition, monthlySales, opportunity, category } = data;
     const priceStats = competition.priceStats, currency = data.currencyId || 'BRL';
@@ -278,6 +305,7 @@
       <div class="mls-opp-detail">${competition.totalSearch > 0 ? `${formatNumber(competition.totalSearch)} produtos similares nessa categoria` : 'Sem dados de concorrência'}</div>
       ${renderImportEligibility(data.importEligibility)}
       ${renderCostCalculator(data)}
+      ${renderSupplierSection()}
       <div class="mls-footer"><span>${data.itemId}</span><button class="mls-refresh-btn" id="mls-refresh">↻ Atualizar</button></div>`;
   }
 
@@ -350,6 +378,7 @@
       chrome.runtime.sendMessage({ type: 'CLEAR_CACHE' }, () => requestAnalysis(currentPageInfo));
     });
     initCalculator(data);
+    init1688Button(data);
   }
 
   function requestAnalysis(pageInfo) {
