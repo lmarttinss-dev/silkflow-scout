@@ -8,13 +8,12 @@ Parte do ecossistema [Silkflow](https://github.com/lmarttinss-dev) — plataform
 
 ## Funcionalidades
 
-- **Score 0–100** calculado a partir de quatro dimensões: demanda, oportunidade, qualidade e vendedor
+- **Score 0–100** calculado a partir de três dimensões: demanda, oportunidade e qualidade
 - **Painel lateral** com análise completa diretamente na página do produto
 - **Posicionamento de preço** com barra visual em relação aos concorrentes
 - **Estimativa de vendas mensais** baseada em `sold_quantity` e tempo do anúncio
-- **Reputação do vendedor** com nível MercadoLíder e histórico de vendas
 - **Buscar no 1688** — abre o 1688.com com o título traduzido para mandarim
-- **Buscar no Alibaba** — abre o Alibaba.com com o título em inglês filtrando por Trade Assurance
+- **Buscar no Alibaba** — abre o Alibaba.com com o título em inglês filtrando por Trade Assurance (`ta=y`)
 - **Buscar por Imagem** — abre o Google Lens com a thumbnail do produto para correspondência visual exata
 - **Fallback via DOM** quando a API retorna 403 — o painel sempre exibe alguma informação
 - **Busca rápida** no popup da extensão com fallback para autosuggest
@@ -62,10 +61,9 @@ silkflow-scout/
 
 | Dimensão     | Peso | Base de cálculo                        |
 |--------------|------|----------------------------------------|
-| Demanda      | 35%  | `sold_quantity` + total de avaliações  |
-| Oportunidade | 25%  | Número de vendedores do mesmo produto  |
-| Qualidade    | 20%  | `rating_average` + volume de reviews   |
-| Vendedor     | 20%  | Nível de reputação + power seller      |
+| Demanda      | 40%  | `sold_quantity` + total de avaliações  |
+| Oportunidade | 35%  | Número de vendedores do mesmo produto  |
+| Qualidade    | 25%  | `rating_average` + volume de reviews   |
 
 ## API utilizada
 

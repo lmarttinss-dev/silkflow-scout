@@ -14,8 +14,11 @@
   - [Tabela de Demanda](#tabela-de-demanda)
   - [Interpretação](#interpretação)
 - [Demanda do nicho](#demanda-do-nicho)
-- [Simulador de Margem](#simulador-de-margem)
 - [Buscar Fornecedor](#buscar-fornecedor)
+- [Regimes de importação](#regimes-de-importação)
+  - [Detecção automática do regime](#detecção-automática-do-regime)
+  - [Importação Simplificada](#importação-simplificada)
+  - [Importação Formal](#importação-formal)
 - [Elegibilidade de importação](#elegibilidade-de-importação)
   - [Mapa por ID de categoria](#mapa-por-id-de-categoria-prioritário)
   - [Fallback por palavras-chave](#fallback-por-palavras-chave-modo-dom)
@@ -115,7 +118,11 @@ Quando a API retorna 403, `background.js` tenta três caminhos em sequência:
 2. Busca por título via DOM: `GET /sites/MLB/search?q={título}`
 3. Item sintético construído 100% a partir dos dados do DOM (`_fromDom: true`)
 
-Quando `item._fromDom === true`, as chamadas de vendedor/categoria/reviews são puladas e o painel exibe um banner de dados parciais.
+Quando `item._fromDom === true`, as chamadas de vendedor/categoria/reviews são puladas e o painel exibe um banner de dados parciais. Rating e reviewCount ainda são lidos do DOM e usados no score.
+
+**Extração de preço com desconto:** o seletor DOM prioriza `.ui-pdp-price__second-line` (preço final após desconto) em vez do primeiro `.andes-money-amount__fraction` da página, que pode ser o preço cheio riscado.
+
+**Estimativa mensal de vendas:** `sold_quantity ÷ meses desde criação`. Em modo DOM, `date_created` é nulo — neste caso o divisor fixo é 12 meses para evitar resultado próximo de zero.
 
 ## Endpoints da API
 
@@ -143,10 +150,11 @@ API externa (sem autenticação):
 
 | Dimensão     | Peso | Fonte |
 |--------------|------|-------|
-| Demanda      | 35%  | `sold_quantity` + total de avaliações |
-| Oportunidade | 25%  | Nº de vendedores do mesmo item + concorrência total |
-| Qualidade    | 20%  | `rating_average` + volume de reviews |
-| Vendedor     | 20%  | Nível de reputação + power seller status |
+| Demanda      | 40%  | `sold_quantity` + total de avaliações |
+| Oportunidade | 35%  | Nº de vendedores do mesmo item + concorrência total |
+| Qualidade    | 25%  | `rating_average` + volume de reviews |
+
+A dimensão Vendedor foi removida pois a reputação do vendedor atual não é relevante para a decisão de entrar no mercado como novo revendedor.
 
 ### Tabela de Demanda
 
@@ -180,38 +188,6 @@ A função `getNicheDemand(competition)` em `background.js` aproveita o campo `s
 
 O resultado é exposto em `competition.nicheDemand` e exibido no painel abaixo da seção de oportunidade. Por ser uma amostra dos top 50 resultados de busca, o total representa um piso conservador do volume do nicho — não o mercado completo.
 
-## Simulador de Margem
-
-Permite calcular viabilidade financeira diretamente no painel, comparando o custo de importação da China com o preço atual do produto no marketplace.
-
-**Fórmulas:**
-
-```
-Produto (BRL)      = Preço China (U$) × 5,70
-Imposto importação = Produto (BRL) × alíquota do regime
-Custo de importação = Produto + Imposto
-
-Margem bruta       = Preço ML − Custo de importação
-Margem líquida     = Preço ML − Custo de importação − Frete nacional − Comissão ML (12%)
-ROI                = Margem líquida / (Custo de importação + Frete nacional) × 100%
-```
-
-| Regime                  | Faixa (U$)    | Imposto  |
-|-------------------------|---------------|----------|
-| Remessa Conforme        | Até 50        | 0%       |
-| Importação Simplificada | 51–3.000      | 20%      |
-| Importação Formal       | Acima de 3.000 | Variável |
-
-A alíquota é determinada automaticamente pela elegibilidade de importação. A cotação U$ 1 ≈ R$ 5,70 é estática e serve apenas como referência visual.
-
-**Interpretação das margens:**
-
-| Resultado | Verde (≥30%) | Amarelo (≥15%) | Laranja (<15%) |
-|-----------|-------------|----------------|----------------|
-| Margem bruta | Excelente spread de importação | Margem razoável | Importação arriscada |
-| Margem líquida | Operação saudável | Margem apertada | Prejuízo provável |
-| ROI | Alto retorno | Retorno moderado | Retorno baixo |
-
 ## Buscar Fornecedor
 
 Dois botões no painel que abrem plataformas de fornecedores chineses com o título do produto traduzido automaticamente.
@@ -219,7 +195,7 @@ Dois botões no painel que abrem plataformas de fornecedores chineses com o tít
 | Botão | Método | URL de destino | Observação |
 |-------|--------|----------------|------------|
 | 1688 | Tradução (Mandarim) | `s.1688.com/selloffer/offer_search.htm?keywords=` | — |
-| Alibaba | Tradução (Inglês) | `alibaba.com/trade/search?SearchText=&fsb=y&IndexArea=product_en` | Trade Assurance ativo |
+| Alibaba | Tradução (Inglês) | `alibaba.com/trade/search?fsb=y&IndexArea=product_en&keywords=&originKeywords=&ta=y` | `ta=y` ativa o filtro Trade Assurance |
 | Buscar por Imagem | Thumbnail do produto | `lens.google.com/uploadbyurl?url=` | Mais assertivo; desabilitado se sem thumbnail |
 
 **Fluxo — botões de texto (1688 e Alibaba):**
@@ -235,6 +211,48 @@ Dois botões no painel que abrem plataformas de fornecedores chineses com o tít
 1. Usuário clica em "Buscar por Imagem"
 2. `content.js` abre diretamente `lens.google.com/uploadbyurl?url=<thumbnail>` em nova aba
 3. Se `data.thumbnail` não estiver disponível (modo DOM), o botão aparece desabilitado
+
+## Regimes de importação
+
+> **Regime ≠ Elegibilidade.** O regime determina *quanto* de imposto incide sobre o produto. A elegibilidade determina *se* o produto pode ser importado (exigências de ANVISA, ANATEL, INMETRO ou proibição total).
+
+O foco da extensão é importação comercial via ML Full. Remessa Conforme (isento até U$ 50) não se aplica — é exclusiva para pessoa física comprando para uso próprio.
+
+### Detecção automática do regime
+
+A função `buildImportRegime(priceUSD)` em `background.js` recebe o preço do produto convertido para dólares (`item.price / 5,70`, arredondado) e retorna o regime aplicável:
+
+```js
+function buildImportRegime(priceUSD) {
+  if (priceUSD > 3000) return { label: 'Importação Formal',       taxFree: false, tax: null, maxUSD: null };
+  return                      { label: 'Importação Simplificada', taxFree: false, tax: 20,   maxUSD: 3000 };
+}
+```
+
+O resultado é exposto em `importEligibility.regime` e consumido pelo Simulador de Margem e pelo Comparativo de Preço para aplicar a alíquota correta automaticamente.
+
+### Importação Simplificada
+
+| Faixa | Alíquota | Base de cálculo |
+|-------|----------|-----------------|
+| Até U$ 3.000 por encomenda | 20% fixo (II) | Valor aduaneiro (preço + frete internacional + seguro) |
+
+Regime padrão para importação comercial de valor moderado. Não exige DI (Declaração de Importação) completa — o desembaraço é feito pelo operador logístico (Correios, DHL, etc.).
+
+**Pontos práticos:**
+- O 20% incide sobre o valor aduaneiro, que pode incluir frete internacional declarado pelo fornecedor
+- ICMS estadual incide adicionalmente (varia por UF, tipicamente 17–25%), mas **não é calculado pela extensão**
+- Produtos regulamentados (ANATEL, ANVISA) ainda exigem certificação mesmo neste regime
+
+Na extensão: `tax: 20`, aplicado como `productBRL × 0,20` no simulador e como divisor `(1 + 0,20)` no comparativo de preço.
+
+### Importação Formal
+
+| Faixa | Alíquota | Requisito |
+|-------|----------|-----------|
+| > U$ 3.000 | Variável por NCM (4–35%) | Declaração de Importação (DI) + despachante |
+
+A extensão **não calcula** este regime — produtos nesta faixa são sinalizados no painel como "Importação Formal" com os campos de imposto em branco.
 
 ## Elegibilidade de importação
 

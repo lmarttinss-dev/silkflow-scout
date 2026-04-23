@@ -102,6 +102,7 @@ async function analyzeProduct(itemId, isCatalog = false, domData = null) {
 
   const item = await resolveItem(itemId, isCatalog, site, BASE, domData);
 
+
   // Quando veio do DOM, pula chamadas que precisam de seller_id / category_id
   let seller = null, category = null, reviews = null;
 
@@ -139,7 +140,7 @@ async function analyzeProduct(itemId, isCatalog = false, domData = null) {
   const competition = competitionResult.status === 'fulfilled' ? competitionResult.value : null;
   const sameItem    = sameItemResult.status    === 'fulfilled' ? sameItemResult.value    : null;
 
-  const score    = calculateScore({ item, seller, reviews, competition, sameItem });
+  const score    = calculateScore({ item, reviews, competition, sameItem });
   const analysis = buildAnalysis({ item, seller, category, reviews, competition, sameItem, score });
 
   if (item._fromDom) analysis.partialData = true;
@@ -147,11 +148,10 @@ async function analyzeProduct(itemId, isCatalog = false, domData = null) {
   return analysis;
 }
 
-function calculateScore({ item, seller, reviews, competition, sameItem }) {
+function calculateScore({ item, reviews, competition, sameItem }) {
   let demandScore = 0;
   let opportunityScore = 0;
   let qualityScore = 0;
-  let sellerScore = 0;
 
   // Demand: based on sold_quantity and reviews
   const sold = item.sold_quantity || 0;
@@ -176,7 +176,6 @@ function calculateScore({ item, seller, reviews, competition, sameItem }) {
   else if (numSellers <= 30) opportunityScore = 40;
   else opportunityScore = 20;
 
-  // Adjust by total category competition
   if (totalCompetition < 100) opportunityScore = Math.min(100, opportunityScore + 10);
   else if (totalCompetition > 5000) opportunityScore = Math.max(0, opportunityScore - 10);
 
@@ -192,37 +191,27 @@ function calculateScore({ item, seller, reviews, competition, sameItem }) {
 
   if (reviewCount > 100) qualityScore = Math.min(100, qualityScore + 5);
 
-  // Seller: based on reputation
-  const repLevel = seller?.seller_reputation?.level_id || '';
-  const powerSeller = seller?.seller_reputation?.power_seller_status || '';
-  const reputationMap = {
-    '5_green': 100, '4_light_green': 80,
-    '3_yellow': 60, '2_orange': 40, '1_red': 20
-  };
-  sellerScore = reputationMap[repLevel] || 50;
-  if (powerSeller === 'platinum') sellerScore = Math.min(100, sellerScore + 10);
-  else if (powerSeller === 'gold') sellerScore = Math.min(100, sellerScore + 5);
-
   const total = Math.round(
-    demandScore * 0.35 +
-    opportunityScore * 0.25 +
-    qualityScore * 0.20 +
-    sellerScore * 0.20
+    demandScore * 0.40 +
+    opportunityScore * 0.35 +
+    qualityScore * 0.25
   );
 
-  return { total, demand: demandScore, opportunity: opportunityScore, quality: qualityScore, seller: sellerScore };
+  return { total, demand: demandScore, opportunity: opportunityScore, quality: qualityScore };
 }
 
 function estimateMonthlySales(item, reviews) {
   const sold = item.sold_quantity || 0;
   if (sold > 0) {
-    // Estimate based on listing age
     const created = new Date(item.date_created);
-    const now = new Date();
-    const monthsOld = Math.max(1, (now - created) / (1000 * 60 * 60 * 24 * 30));
-    return Math.round(sold / monthsOld);
+    const validDate = item.date_created && created.getFullYear() > 2000;
+    if (validDate) {
+      const monthsOld = Math.max(1, (Date.now() - created) / (1000 * 60 * 60 * 24 * 30));
+      return Math.round(sold / monthsOld);
+    }
+    // Sem data de criação (modo DOM): divide por 12 como estimativa conservadora
+    return Math.round(sold / 12);
   }
-  // Fallback: estimate from reviews (roughly 10% of buyers leave reviews)
   const reviewCount = reviews?.paging?.total || 0;
   return Math.round(reviewCount * 0.5);
 }
@@ -356,9 +345,8 @@ function checkImportEligibility(categoryPath, title, pathFromRoot = []) {
 }
 
 function buildImportRegime(priceUSD) {
-  if (priceUSD <= 50)   return { label: 'Remessa Conforme', taxFree: true,  tax: 0,  maxUSD: 50 };
-  if (priceUSD <= 3000) return { label: 'Importação Simplificada', taxFree: false, tax: 20, maxUSD: 3000 };
-  return { label: 'Importação Formal', taxFree: false, tax: null, maxUSD: null };
+  if (priceUSD > 3000) return { label: 'Importação Formal', taxFree: false, tax: null, maxUSD: null };
+  return { label: 'Importação Simplificada', taxFree: false, tax: 20, maxUSD: 3000 };
 }
 
 function getNicheDemand(competition) {
