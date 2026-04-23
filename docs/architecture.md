@@ -15,12 +15,12 @@
   - [Interpretação](#interpretação)
 - [Demanda do nicho](#demanda-do-nicho)
 - [Simulador de Margem](#simulador-de-margem)
+- [Buscar Fornecedor no 1688](#buscar-fornecedor-no-1688)
 - [Elegibilidade de importação](#elegibilidade-de-importação)
   - [Mapa por ID de categoria](#mapa-por-id-de-categoria-prioritário)
   - [Fallback por palavras-chave](#fallback-por-palavras-chave-modo-dom)
 - [Adicionando um novo marketplace](#adicionando-um-novo-marketplace)
 - [Convenções de commit](#convenções-de-commit)
-
 
 ## Por que uma extensão?
 
@@ -104,6 +104,7 @@ Cada módulo em `marketplaces/` é um IIFE que retorna:
 |--------|---------|------------|
 | `ANALYZE_PRODUCT` | `{ itemId, isCatalog, marketplace, domData }` | Análise completa do produto |
 | `SEARCH_PRODUCTS` | `{ query, site }` | Busca rápida no popup |
+| `TRANSLATE_TITLE` | `{ title }` | Traduz o título para mandarim via Google Translate |
 | `CLEAR_CACHE` | — | Limpa o cache de 5 min do service worker |
 
 ## Cadeia de fallback da API (Mercado Livre)
@@ -129,6 +130,12 @@ API pública oficial do Mercado Livre, sem autenticação:
 | `GET /sites/{site}/search?q=` | Concorrência e busca por título |
 | `GET /sites/{site}/search?catalog_product_id=` | Resolve páginas de catálogo |
 | `GET /sites/{site}/autosuggest?q=` | Fallback de busca no popup |
+
+API externa (sem autenticação):
+
+| Endpoint | Uso |
+|----------|-----|
+| `GET translate.googleapis.com/translate_a/single` | Tradução do título para mandarim (client=gtx) |
 
 ## Score
 
@@ -205,6 +212,19 @@ A alíquota é determinada automaticamente pela elegibilidade de importação. A
 | Margem líquida | Operação saudável | Margem apertada | Prejuízo provável |
 | ROI | Alto retorno | Retorno moderado | Retorno baixo |
 
+## Buscar Fornecedor no 1688
+
+Botão no painel que abre o 1688.com com o título do produto traduzido para mandarim, facilitando a busca de fornecedores chineses.
+
+**Fluxo:**
+
+1. Usuário clica em "Buscar no 1688"
+2. `content.js` envia `TRANSLATE_TITLE` ao service worker com o título do produto
+3. `background.js` chama a API do Google Translate (endpoint não autenticado `client=gtx`, `tl=zh-CN`)
+4. O título traduzido (primeiros 80 caracteres) é usado para montar a URL de busca do 1688
+5. A página abre em nova aba: `https://s.1688.com/selloffer/offer_search.htm?keywords=<título_mandarim>`
+
+Se a tradução falhar, o título original é usado como fallback. A chamada ao Google Translate é feita pelo service worker (não pelo content script) para aproveitar as `host_permissions` da extensão.
 
 ## Elegibilidade de importação
 

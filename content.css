@@ -784,6 +784,55 @@
   padding: 4px 0 2px;
 }
 
+/* ── Supplier Section ────────────────────────────────────────────────────────── */
+
+.mls-supplier-section {
+  padding: 4px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mls-supplier-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  background: #161B22;
+  border: 1px solid #1E2A3A;
+  border-radius: 8px;
+  color: #E6EDF3;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.mls-supplier-btn:hover {
+  background: #1C2331;
+  border-color: #FFE600;
+  color: #FFE600;
+}
+
+.mls-supplier-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mls-supplier-flag {
+  font-size: 15px;
+}
+
+.mls-supplier-hint {
+  font-size: 10px;
+  color: #4A5568;
+  text-align: center;
+  line-height: 1.4;
+}
+
 /* ── Search Badges ───────────────────────────────────────────────────────────── */
 
 .mls-search-badge {

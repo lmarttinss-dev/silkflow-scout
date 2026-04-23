@@ -53,6 +53,7 @@
     "https://lista.mercadolivre.com.br/*",
     "https://shopee.com.br/*",
     "https://www.amazon.com.br/*",
-    "https://www.amazon.com/*"
+    "https://www.amazon.com/*",
+    "https://translate.googleapis.com/*"
   ]
 }

@@ -487,4 +487,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true });
     return true;
   }
+
+  if (message.type === 'TRANSLATE_TITLE') {
+    const q = encodeURIComponent((message.title || '').substring(0, 80));
+    fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=zh-CN&dt=t&q=${q}`)
+      .then(r => r.json())
+      .then(data => {
+        const translated = data?.[0]?.[0]?.[0] || message.title;
+        sendResponse({ success: true, translated });
+      })
+      .catch(() => sendResponse({ success: true, translated: message.title }));
+    return true;
+  }
 });
