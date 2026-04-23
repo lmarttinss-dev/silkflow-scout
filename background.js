@@ -102,6 +102,7 @@ async function analyzeProduct(itemId, isCatalog = false, domData = null) {
 
   const item = await resolveItem(itemId, isCatalog, site, BASE, domData);
 
+  console.log('[Scout] domData recebido:', domData ? { ...domData, title: domData.title?.substring(0, 50) } : null);
   console.log('[Scout] item resolvido:', {
     id: item.id,
     title: item.title?.substring(0, 50),
