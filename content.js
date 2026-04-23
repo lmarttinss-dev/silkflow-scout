@@ -248,7 +248,8 @@
     recalc();
   }
 
-  function renderSupplierSection() {
+  function renderSupplierSection(thumbnail) {
+    const hasImage = !!thumbnail;
     return `
       <div class="mls-divider"></div>
       <div class="mls-section-title">Buscar Fornecedor</div>
@@ -265,6 +266,11 @@
           <span class="mls-supplier-hint">Mandarim</span>
           <span class="mls-supplier-hint">Inglês · Trade Assurance</span>
         </div>
+        <button class="mls-supplier-btn mls-supplier-btn-image" id="mls-search-lens"
+          ${hasImage ? '' : 'disabled title="Imagem não disponível para este produto"'}>
+          🔍 Buscar por Imagem ${hasImage ? '' : '<span class="mls-supplier-no-img">(sem imagem)</span>'}
+        </button>
+        ${hasImage ? '<div class="mls-supplier-hint mls-supplier-hint-center">Google Lens · mais assertivo que texto</div>' : ''}
       </div>`;
   }
 
@@ -294,6 +300,13 @@
           btnAlibaba.innerHTML = '<span class="mls-supplier-flag">🌐</span> Alibaba';
           btnAlibaba.disabled = false;
         });
+      });
+    }
+
+    const btnLens = document.getElementById('mls-search-lens');
+    if (btnLens && data.thumbnail) {
+      btnLens.addEventListener('click', () => {
+        window.open(`https://lens.google.com/uploadbyurl?url=${encodeURIComponent(data.thumbnail)}`, '_blank');
       });
     }
   }
@@ -376,7 +389,7 @@
       </div>` : ''}
       ${renderImportEligibility(data.importEligibility)}
       ${renderCostCalculator(data)}
-      ${renderSupplierSection()}
+      ${renderSupplierSection(data.thumbnail)}
       <div class="mls-footer"><span>${data.itemId}</span><button class="mls-refresh-btn" id="mls-refresh">↻ Atualizar</button></div>`;
   }
 

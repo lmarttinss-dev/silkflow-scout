@@ -15,6 +15,7 @@ Parte do ecossistema [Silkflow](https://github.com/lmarttinss-dev) — plataform
 - **Reputação do vendedor** com nível MercadoLíder e histórico de vendas
 - **Buscar no 1688** — abre o 1688.com com o título traduzido para mandarim
 - **Buscar no Alibaba** — abre o Alibaba.com com o título em inglês filtrando por Trade Assurance
+- **Buscar por Imagem** — abre o Google Lens com a thumbnail do produto para correspondência visual exata
 - **Fallback via DOM** quando a API retorna 403 — o painel sempre exibe alguma informação
 - **Busca rápida** no popup da extensão com fallback para autosuggest
 - **Cache de 5 minutos** no service worker para evitar excesso de requisições

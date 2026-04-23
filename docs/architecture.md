@@ -216,20 +216,25 @@ A alíquota é determinada automaticamente pela elegibilidade de importação. A
 
 Dois botões no painel que abrem plataformas de fornecedores chineses com o título do produto traduzido automaticamente.
 
-| Botão | Idioma | URL de destino | Filtro |
-|-------|--------|----------------|--------|
-| 1688 | Mandarim (`zh-CN`) | `s.1688.com/selloffer/offer_search.htm?keywords=` | — |
-| Alibaba | Inglês (`en`) | `alibaba.com/trade/search?SearchText=&fsb=y&IndexArea=product_en` | Trade Assurance |
+| Botão | Método | URL de destino | Observação |
+|-------|--------|----------------|------------|
+| 1688 | Tradução (Mandarim) | `s.1688.com/selloffer/offer_search.htm?keywords=` | — |
+| Alibaba | Tradução (Inglês) | `alibaba.com/trade/search?SearchText=&fsb=y&IndexArea=product_en` | Trade Assurance ativo |
+| Buscar por Imagem | Thumbnail do produto | `lens.google.com/uploadbyurl?url=` | Mais assertivo; desabilitado se sem thumbnail |
 
-**Fluxo (ambos os botões):**
+**Fluxo — botões de texto (1688 e Alibaba):**
 
 1. Usuário clica no botão
 2. `content.js` envia `TRANSLATE_TITLE` com `{ title, targetLang }` ao service worker
-3. `background.js` chama `translate.googleapis.com` com `client=gtx` e o idioma alvo
-4. O título traduzido (primeiros 80 caracteres) monta a URL de busca
-5. A página abre em nova aba
+3. `background.js` chama `translate.googleapis.com` (`client=gtx`) e retorna o título traduzido
+4. O título (primeiros 80 caracteres) monta a URL de busca; página abre em nova aba
+5. Fallback: se a tradução falhar, usa o título original
 
-Se a tradução falhar, o título original é usado como fallback. As chamadas são feitas pelo service worker para aproveitar as `host_permissions` da extensão.
+**Fluxo — Google Lens:**
+
+1. Usuário clica em "Buscar por Imagem"
+2. `content.js` abre diretamente `lens.google.com/uploadbyurl?url=<thumbnail>` em nova aba
+3. Se `data.thumbnail` não estiver disponível (modo DOM), o botão aparece desabilitado
 
 ## Elegibilidade de importação
 

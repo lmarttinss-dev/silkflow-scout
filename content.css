@@ -845,6 +845,30 @@
   line-height: 1.4;
 }
 
+.mls-supplier-hint-center {
+  grid-column: 1 / -1;
+}
+
+.mls-supplier-btn-image {
+  margin-top: 2px;
+  background: #0D1117;
+  border-style: dashed;
+  font-size: 12px;
+}
+
+.mls-supplier-btn-image:not(:disabled):hover {
+  background: #1C2331;
+  border-color: #FFE600;
+  border-style: solid;
+  color: #FFE600;
+}
+
+.mls-supplier-no-img {
+  font-size: 10px;
+  color: #4A5568;
+  font-weight: 400;
+}
+
 /* ── Search Badges ───────────────────────────────────────────────────────────── */
 
 .mls-search-badge {
