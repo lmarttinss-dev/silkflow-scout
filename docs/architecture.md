@@ -19,7 +19,6 @@
 - [Buscar Fornecedor](#buscar-fornecedor)
 - [Regimes de importação](#regimes-de-importação)
   - [Detecção automática do regime](#detecção-automática-do-regime)
-  - [Remessa Conforme](#remessa-conforme)
   - [Importação Simplificada](#importação-simplificada)
   - [Importação Formal](#importação-formal)
 - [Elegibilidade de importação](#elegibilidade-de-importação)
@@ -204,8 +203,7 @@ ROI                = Margem líquida / (Custo de importação + Tarifa ML Full) 
 
 | Regime                  | Faixa (U$)    | Imposto  |
 |-------------------------|---------------|----------|
-| Remessa Conforme        | Até 50        | 0%       |
-| Importação Simplificada | 51–3.000      | 20%      |
+| Importação Simplificada | Até 3.000     | 20%      |
 | Importação Formal       | Acima de 3.000 | Variável |
 
 A alíquota é determinada automaticamente pela elegibilidade de importação. A cotação U$ 1 ≈ R$ 5,70 é estática e serve apenas como referência visual.
@@ -269,7 +267,9 @@ Dois botões no painel que abrem plataformas de fornecedores chineses com o tít
 
 ## Regimes de importação
 
-> **Regime ≠ Elegibilidade.** O regime determina *quanto* de imposto incide sobre o produto. A elegibilidade determina *se* o produto pode ser importado (exigências de ANVISA, ANATEL, INMETRO ou proibição total). Um produto pode ser elegível mas cair no regime de Importação Formal, ou ser inelegível mesmo no regime de Remessa Conforme.
+> **Regime ≠ Elegibilidade.** O regime determina *quanto* de imposto incide sobre o produto. A elegibilidade determina *se* o produto pode ser importado (exigências de ANVISA, ANATEL, INMETRO ou proibição total).
+
+O foco da extensão é importação comercial via ML Full. Remessa Conforme (isento até U$ 50) não se aplica — é exclusiva para pessoa física comprando para uso próprio.
 
 ### Detecção automática do regime
 
@@ -277,46 +277,35 @@ A função `buildImportRegime(priceUSD)` em `background.js` recebe o preço do p
 
 ```js
 function buildImportRegime(priceUSD) {
-  if (priceUSD <= 50)   return { label: 'Remessa Conforme',        taxFree: true,  tax: 0,    maxUSD: 50   };
-  if (priceUSD <= 3000) return { label: 'Importação Simplificada', taxFree: false, tax: 20,   maxUSD: 3000 };
-  return                       { label: 'Importação Formal',       taxFree: false, tax: null, maxUSD: null };
+  if (priceUSD > 3000) return { label: 'Importação Formal',       taxFree: false, tax: null, maxUSD: null };
+  return                      { label: 'Importação Simplificada', taxFree: false, tax: 20,   maxUSD: 3000 };
 }
 ```
 
 O resultado é exposto em `importEligibility.regime` e consumido pelo Simulador de Margem e pelo Comparativo de Preço para aplicar a alíquota correta automaticamente.
 
-### Remessa Conforme
-
-| Faixa | Alíquota | Observação |
-|-------|----------|------------|
-| ≤ U$ 50 por encomenda | 0% | Isento de II e IPI |
-
-Criado em 2023 para regularizar as importações de plataformas como Shein e Shopee. Válido apenas para **pessoa física comprando para uso próprio** — não se aplica a importações comerciais em volume.
-
-Na extensão: `taxFree: true`, o simulador oculta a linha de imposto e o comparativo usa alíquota 0.
-
 ### Importação Simplificada
 
 | Faixa | Alíquota | Base de cálculo |
 |-------|----------|-----------------|
-| U$ 51 – U$ 3.000 por encomenda | 20% fixo (II) | Valor aduaneiro (preço + frete internacional + seguro) |
+| Até U$ 3.000 por encomenda | 20% fixo (II) | Valor aduaneiro (preço + frete internacional + seguro) |
 
-Modalidade usada pela Receita Federal para encomendas internacionais de valor moderado. Não exige DI (Declaração de Importação) completa — o desembaraço é feito pelo próprio operador logístico (Correios, DHL, etc.).
+Regime padrão para importação comercial de valor moderado. Não exige DI (Declaração de Importação) completa — o desembaraço é feito pelo operador logístico (Correios, DHL, etc.).
 
-**Pontos práticos para o importador:**
+**Pontos práticos:**
 - O 20% incide sobre o valor aduaneiro, que pode incluir frete internacional declarado pelo fornecedor
-- ICMS estadual incide adicionalmente (varia por UF, tipicamente 17–25%) mas **não é calculado pela extensão** — o simulador mostra apenas o II de 20%
-- Produtos com regulamentação específica (ANATEL, ANVISA) ainda exigem certificação mesmo neste regime
+- ICMS estadual incide adicionalmente (varia por UF, tipicamente 17–25%), mas **não é calculado pela extensão**
+- Produtos regulamentados (ANATEL, ANVISA) ainda exigem certificação mesmo neste regime
 
-Na extensão: `tax: 20`, aplicado como `productBRL × 0,20` no simulador e como `(1 + 0,20)` no denominador do comparativo de preço.
+Na extensão: `tax: 20`, aplicado como `productBRL × 0,20` no simulador e como divisor `(1 + 0,20)` no comparativo de preço.
 
 ### Importação Formal
 
-| Faixa | Alíquota | Base de cálculo |
-|-------|----------|-----------------|
-| > U$ 3.000 | Variável por NCM | Exige Declaração de Importação (DI) e despachante |
+| Faixa | Alíquota | Requisito |
+|-------|----------|-----------|
+| > U$ 3.000 | Variável por NCM (4–35%) | Declaração de Importação (DI) + despachante |
 
-A alíquota varia conforme o código NCM do produto (4–35%). A extensão **não calcula** este regime — produtos nesta faixa são sinalizados no painel como "Importação Formal" mas os campos de imposto ficam em branco.
+A extensão **não calcula** este regime — produtos nesta faixa são sinalizados no painel como "Importação Formal" com os campos de imposto em branco.
 
 ## Elegibilidade de importação
 

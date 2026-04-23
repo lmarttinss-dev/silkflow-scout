@@ -357,9 +357,8 @@ function checkImportEligibility(categoryPath, title, pathFromRoot = []) {
 }
 
 function buildImportRegime(priceUSD) {
-  if (priceUSD <= 50)   return { label: 'Remessa Conforme', taxFree: true,  tax: 0,  maxUSD: 50 };
-  if (priceUSD <= 3000) return { label: 'Importação Simplificada', taxFree: false, tax: 20, maxUSD: 3000 };
-  return { label: 'Importação Formal', taxFree: false, tax: null, maxUSD: null };
+  if (priceUSD > 3000) return { label: 'Importação Formal', taxFree: false, tax: null, maxUSD: null };
+  return { label: 'Importação Simplificada', taxFree: false, tax: 20, maxUSD: 3000 };
 }
 
 function getNicheDemand(competition) {
