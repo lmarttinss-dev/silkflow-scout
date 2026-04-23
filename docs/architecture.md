@@ -15,7 +15,7 @@
   - [Interpretação](#interpretação)
 - [Demanda do nicho](#demanda-do-nicho)
 - [Simulador de Margem](#simulador-de-margem)
-- [Buscar Fornecedor no 1688](#buscar-fornecedor-no-1688)
+- [Buscar Fornecedor](#buscar-fornecedor)
 - [Elegibilidade de importação](#elegibilidade-de-importação)
   - [Mapa por ID de categoria](#mapa-por-id-de-categoria-prioritário)
   - [Fallback por palavras-chave](#fallback-por-palavras-chave-modo-dom)
@@ -104,7 +104,7 @@ Cada módulo em `marketplaces/` é um IIFE que retorna:
 |--------|---------|------------|
 | `ANALYZE_PRODUCT` | `{ itemId, isCatalog, marketplace, domData }` | Análise completa do produto |
 | `SEARCH_PRODUCTS` | `{ query, site }` | Busca rápida no popup |
-| `TRANSLATE_TITLE` | `{ title }` | Traduz o título para mandarim via Google Translate |
+| `TRANSLATE_TITLE` | `{ title, targetLang? }` | Traduz o título via Google Translate (`zh-CN` ou `en`; padrão: `zh-CN`) |
 | `CLEAR_CACHE` | — | Limpa o cache de 5 min do service worker |
 
 ## Cadeia de fallback da API (Mercado Livre)
@@ -135,7 +135,7 @@ API externa (sem autenticação):
 
 | Endpoint | Uso |
 |----------|-----|
-| `GET translate.googleapis.com/translate_a/single` | Tradução do título para mandarim (client=gtx) |
+| `GET translate.googleapis.com/translate_a/single` | Tradução do título para mandarim (1688) ou inglês (Alibaba) via `client=gtx` |
 
 ## Score
 
@@ -212,19 +212,24 @@ A alíquota é determinada automaticamente pela elegibilidade de importação. A
 | Margem líquida | Operação saudável | Margem apertada | Prejuízo provável |
 | ROI | Alto retorno | Retorno moderado | Retorno baixo |
 
-## Buscar Fornecedor no 1688
+## Buscar Fornecedor
 
-Botão no painel que abre o 1688.com com o título do produto traduzido para mandarim, facilitando a busca de fornecedores chineses.
+Dois botões no painel que abrem plataformas de fornecedores chineses com o título do produto traduzido automaticamente.
 
-**Fluxo:**
+| Botão | Idioma | URL de destino | Filtro |
+|-------|--------|----------------|--------|
+| 1688 | Mandarim (`zh-CN`) | `s.1688.com/selloffer/offer_search.htm?keywords=` | — |
+| Alibaba | Inglês (`en`) | `alibaba.com/trade/search?SearchText=&fsb=y&IndexArea=product_en` | Trade Assurance |
 
-1. Usuário clica em "Buscar no 1688"
-2. `content.js` envia `TRANSLATE_TITLE` ao service worker com o título do produto
-3. `background.js` chama a API do Google Translate (endpoint não autenticado `client=gtx`, `tl=zh-CN`)
-4. O título traduzido (primeiros 80 caracteres) é usado para montar a URL de busca do 1688
-5. A página abre em nova aba: `https://s.1688.com/selloffer/offer_search.htm?keywords=<título_mandarim>`
+**Fluxo (ambos os botões):**
 
-Se a tradução falhar, o título original é usado como fallback. A chamada ao Google Translate é feita pelo service worker (não pelo content script) para aproveitar as `host_permissions` da extensão.
+1. Usuário clica no botão
+2. `content.js` envia `TRANSLATE_TITLE` com `{ title, targetLang }` ao service worker
+3. `background.js` chama `translate.googleapis.com` com `client=gtx` e o idioma alvo
+4. O título traduzido (primeiros 80 caracteres) monta a URL de busca
+5. A página abre em nova aba
+
+Se a tradução falhar, o título original é usado como fallback. As chamadas são feitas pelo service worker para aproveitar as `host_permissions` da extensão.
 
 ## Elegibilidade de importação
 
