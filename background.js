@@ -455,6 +455,19 @@ function buildAnalysis({ item, seller, category, reviews, competition, sameItem,
   };
 }
 
+// Remove ruído de SEO do ML e limita a 6 palavras para gerar queries mais precisas em 1688/Alibaba
+function cleanTitleForSearch(title) {
+  return title
+    .replace(/\(.*?\)/g, ' ')
+    .replace(/\b\d+\s*(un(idades?)?|pcs?|peças?|pares?|ml|g|kg|cm|mm|metros?)\b/gi, ' ')
+    .replace(/\b(kit|pack|combo|original|premium|pro|plus|max|ultra|novo|nova|importado|garantia|lacrado|oferta|promoção|grátis|frete|brinde|lançamento|exclusivo|bivolt|110v|220v)\b/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .slice(0, 6)
+    .join(' ');
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'ANALYZE_PRODUCT') {
     analyzeProduct(message.itemId, message.isCatalog || false, message.domData || null)
@@ -491,7 +504,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === 'TRANSLATE_TITLE') {
     const targetLang = message.targetLang || 'zh-CN';
-    const q = encodeURIComponent((message.title || '').substring(0, 80));
+    const q = encodeURIComponent(cleanTitleForSearch(message.title || ''));
     fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${q}`)
       .then(r => r.json())
       .then(data => {
