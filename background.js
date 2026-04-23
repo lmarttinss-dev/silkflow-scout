@@ -250,7 +250,11 @@ const IMPORT_RULES = [
   {
     agency: 'ANATEL',
     reason: 'Equipamentos com rádio ou telecomunicação exigem certificação',
-    pattern: /celular|smartphone|tablet|notebook|computador|roteador|modem|wi-fi|wifi|bluetooth|drone|câmera\s*ip|gps|walkie|radio|antena|tv\s|televisão|monitor|console|videogame|fone|headset|caixa\s*de\s*som|speaker/i
+    // "celular" removido — aparece como modificador em acessórios ("suporte para celular",
+    // "carregador celular") causando falsos positivos; títulos de aparelhos reais incluem
+    // "smartphone" ou nome de modelo. Termos genéricos como "bluetooth" e "fone" também
+    // removidos pois aparecem em acessórios passivos que não precisam de certificação.
+    pattern: /smartphone|tablet|notebook|roteador|modem|wi-fi\s*\d|modem\s*4g|modem\s*5g|drone|câmera\s*ip|walkie[-\s]talkie|rádio\s*comunicador|televisão|monitor\s*\d|console\s*de\s*jogo|videogame/i
   },
   {
     agency: 'ANVISA',
@@ -285,8 +289,9 @@ const CATEGORY_AGENCY_MAP = {
   'MLB29884':  { agency: 'ANVISA',  reason: 'Manicure e Pedicure exige registro sanitário' },
   'MLB431646': { agency: 'ANVISA',  reason: 'Farmácia exige registro sanitário' },
   'MLB1403':   { agency: 'ANVISA',  reason: 'Alimentos e Bebidas exigem registro sanitário' },
-  // ANATEL — Telecomunicações, eletrônicos com rádio
-  'MLB1051':   { agency: 'ANATEL', reason: 'Celulares e Telefones exigem certificação ANATEL' },
+  // ANATEL — apenas dispositivos que transmitem/recebem sinal (não acessórios passivos)
+  // MLB1051 (Celulares e Telefones) excluído — contém MLB3813 (Acessórios para Celulares)
+  // que são itens passivos (suportes, capas, cabos) sem necessidade de certificação
   'MLB1055':   { agency: 'ANATEL', reason: 'Celulares e Smartphones exigem certificação ANATEL' },
   'MLB417704': { agency: 'ANATEL', reason: 'Smartwatches exigem certificação ANATEL' },
   'MLB2908':   { agency: 'ANATEL', reason: 'Rádio Comunicadores exigem certificação ANATEL' },
