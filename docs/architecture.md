@@ -1,5 +1,26 @@
 # Arquitetura — Silkflow Scout
 
+## Índice
+
+- [Por que uma extensão?](#por-que-uma-extensão)
+- [Estrutura de arquivos](#estrutura-de-arquivos)
+- [Fluxo de execução](#fluxo-de-execução)
+- [Contrato dos módulos de marketplace](#contrato-dos-módulos-de-marketplace)
+- [Comunicação content ↔ background](#comunicação-content--background)
+- [Cadeia de fallback da API (Mercado Livre)](#cadeia-de-fallback-da-api-mercado-livre)
+- [Endpoints da API](#endpoints-da-api)
+- [Score](#score)
+  - [Pesos](#pesos)
+  - [Tabela de Demanda](#tabela-de-demanda)
+  - [Interpretação](#interpretação)
+- [Demanda do nicho](#demanda-do-nicho)
+- [Simulador de Margem](#simulador-de-margem)
+- [Elegibilidade de importação](#elegibilidade-de-importação)
+  - [Mapa por ID de categoria](#mapa-por-id-de-categoria-prioritário)
+  - [Fallback por palavras-chave](#fallback-por-palavras-chave-modo-dom)
+- [Adicionando um novo marketplace](#adicionando-um-novo-marketplace)
+- [Convenções de commit](#convenções-de-commit)
+
 ## Por que uma extensão?
 
 A API pública do Mercado Livre não expõe tudo que um vendedor precisa para tomar decisões de importação.
