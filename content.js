@@ -124,30 +124,51 @@
                   : (data.importEligibility?.regime?.tax ?? 20);
     return `
       <div class="mls-divider"></div>
-      <div class="mls-section-title">Calculadora de Custo</div>
+      <div class="mls-section-title">Simulador de Margem</div>
       <div class="mls-calc-card">
         <div class="mls-calc-input-row">
           <label class="mls-calc-label" for="mls-china-price">Preço China (U$)</label>
           <input class="mls-calc-input" id="mls-china-price" type="number" min="0" step="0.01" placeholder="0,00">
         </div>
         <div class="mls-calc-input-row">
-          <label class="mls-calc-label" for="mls-shipping">Frete (R$)</label>
+          <label class="mls-calc-label" for="mls-shipping">Frete nacional (R$)</label>
           <input class="mls-calc-input" id="mls-shipping" type="number" min="0" step="1" value="30">
         </div>
         <div class="mls-calc-result" id="mls-calc-result" style="display:none">
           <div class="mls-calc-row"><span>Produto (BRL)</span><span id="cr-product">—</span></div>
-          <div class="mls-calc-row"><span>Frete</span><span id="cr-shipping">—</span></div>
           <div class="mls-calc-row mls-calc-tax" id="cr-tax-row"><span>Imposto import. (${taxRate}%)</span><span id="cr-tax">—</span></div>
-          <div class="mls-calc-row mls-calc-subtotal"><span>Custo total</span><span id="cr-total">—</span></div>
+          <div class="mls-calc-row mls-calc-subtotal"><span>Custo de importação</span><span id="cr-import-cost">—</span></div>
+          <div class="mls-calc-divider"></div>
+          <div class="mls-calc-row"><span>Frete nacional</span><span id="cr-shipping">—</span></div>
           <div class="mls-calc-row"><span>Comissão ML (~12%)</span><span id="cr-commission">—</span></div>
           <div class="mls-calc-divider"></div>
-          <div class="mls-calc-row mls-calc-margin-row">
-            <span>Margem bruta</span>
-            <span id="cr-margin">—</span>
-          </div>
-          <div class="mls-calc-margin-bar-wrap">
-            <div class="mls-calc-margin-bar"><div class="mls-calc-margin-fill" id="cr-margin-fill"></div></div>
-            <span class="mls-calc-margin-pct" id="cr-margin-pct">—</span>
+          <div class="mls-calc-margin-block">
+            <div class="mls-calc-margin-item">
+              <div class="mls-calc-margin-header">
+                <span class="mls-calc-margin-label">Margem bruta</span>
+                <span class="mls-calc-margin-hint">sem frete e comissão</span>
+              </div>
+              <div class="mls-calc-margin-values">
+                <span id="cr-gross-margin">—</span>
+                <span class="mls-calc-margin-pct" id="cr-gross-pct">—</span>
+              </div>
+              <div class="mls-calc-margin-bar"><div class="mls-calc-margin-fill" id="cr-gross-fill"></div></div>
+            </div>
+            <div class="mls-calc-margin-item">
+              <div class="mls-calc-margin-header">
+                <span class="mls-calc-margin-label">Margem líquida</span>
+                <span class="mls-calc-margin-hint">após todos os custos</span>
+              </div>
+              <div class="mls-calc-margin-values">
+                <span id="cr-net-margin">—</span>
+                <span class="mls-calc-margin-pct" id="cr-net-pct">—</span>
+              </div>
+              <div class="mls-calc-margin-bar"><div class="mls-calc-margin-fill" id="cr-net-fill"></div></div>
+            </div>
+            <div class="mls-calc-roi-row">
+              <span>ROI estimado</span>
+              <span id="cr-roi">—</span>
+            </div>
           </div>
         </div>
         <div class="mls-calc-footnote" id="mls-calc-empty">Informe o preço de compra na China para calcular.</div>
@@ -161,43 +182,62 @@
     const taxRate   = data.importEligibility?.regime?.taxFree ? 0
                     : (data.importEligibility?.regime?.tax ?? 20) / 100;
 
+    function marginColor(pct) {
+      return pct >= 30 ? '#00C853' : pct >= 15 ? '#FFD600' : '#FF6D00';
+    }
+
+    function setMarginEl(valueId, pctId, fillId, value, pct) {
+      const valueEl = document.getElementById(valueId);
+      const pctEl   = document.getElementById(pctId);
+      const fillEl  = document.getElementById(fillId);
+      const color   = marginColor(pct);
+      const fillPct = Math.max(0, Math.min(100, pct));
+      if (valueEl) { valueEl.textContent = formatCurrency(value, 'BRL'); valueEl.style.color = color; }
+      if (pctEl)   { pctEl.textContent = `${pct.toFixed(1)}%`; pctEl.style.color = color; }
+      if (fillEl)  { fillEl.style.width = `${fillPct}%`; fillEl.style.background = color; }
+    }
+
     function recalc() {
-      const chinaUSD  = parseFloat(document.getElementById('mls-china-price')?.value) || 0;
-      const shipping  = parseFloat(document.getElementById('mls-shipping')?.value)    || 0;
-      const result    = document.getElementById('mls-calc-result');
-      const empty     = document.getElementById('mls-calc-empty');
+      const chinaUSD = parseFloat(document.getElementById('mls-china-price')?.value) || 0;
+      const shipping = parseFloat(document.getElementById('mls-shipping')?.value)    || 0;
+      const result   = document.getElementById('mls-calc-result');
+      const empty    = document.getElementById('mls-calc-empty');
       if (!result || !empty) return;
 
       if (chinaUSD <= 0) { result.style.display = 'none'; empty.style.display = 'block'; return; }
       result.style.display = 'block'; empty.style.display = 'none';
 
-      const productBRL   = chinaUSD * USD_RATE;
-      const taxBase      = productBRL + shipping;
-      const importTax    = taxBase * taxRate;
-      const totalCost    = productBRL + shipping + importTax;
-      const commission   = mlPrice * ML_FEE;
-      const grossMargin  = mlPrice - totalCost - commission;
-      const marginPct    = mlPrice > 0 ? (grossMargin / mlPrice) * 100 : 0;
-      const marginColor  = marginPct >= 30 ? '#00C853' : marginPct >= 15 ? '#FFD600' : '#FF6D00';
-      const fillPct      = Math.max(0, Math.min(100, marginPct));
+      const productBRL  = chinaUSD * USD_RATE;
+      const importTax   = productBRL * taxRate;
+      const importCost  = productBRL + importTax;
+      const commission  = mlPrice * ML_FEE;
+
+      const grossMargin = mlPrice - importCost;
+      const grossPct    = mlPrice > 0 ? (grossMargin / mlPrice) * 100 : 0;
+
+      const netMargin   = mlPrice - importCost - shipping - commission;
+      const netPct      = mlPrice > 0 ? (netMargin / mlPrice) * 100 : 0;
+
+      const invested    = importCost + shipping;
+      const roi         = invested > 0 ? (netMargin / invested) * 100 : 0;
 
       const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
       const fmt = v => formatCurrency(v, 'BRL');
 
-      set('cr-product',    fmt(productBRL));
-      set('cr-shipping',   fmt(shipping));
-      set('cr-tax',        fmt(importTax));
-      set('cr-total',      fmt(totalCost));
-      set('cr-commission', fmt(commission));
-      set('cr-margin',     fmt(grossMargin));
-      set('cr-margin-pct', `${marginPct.toFixed(1)}%`);
+      set('cr-product',     fmt(productBRL));
+      set('cr-tax',         fmt(importTax));
+      set('cr-import-cost', fmt(importCost));
+      set('cr-shipping',    fmt(shipping));
+      set('cr-commission',  fmt(commission));
 
-      const marginEl = document.getElementById('cr-margin');
-      const pctEl    = document.getElementById('cr-margin-pct');
-      const fillEl   = document.getElementById('cr-margin-fill');
-      if (marginEl) marginEl.style.color = marginColor;
-      if (pctEl)    pctEl.style.color    = marginColor;
-      if (fillEl)   { fillEl.style.width = `${fillPct}%`; fillEl.style.background = marginColor; }
+      setMarginEl('cr-gross-margin', 'cr-gross-pct', 'cr-gross-fill', grossMargin, grossPct);
+      setMarginEl('cr-net-margin',   'cr-net-pct',   'cr-net-fill',   netMargin,   netPct);
+
+      const roiEl = document.getElementById('cr-roi');
+      if (roiEl) {
+        roiEl.textContent = `${roi.toFixed(1)}%`;
+        roiEl.style.color = marginColor(roi);
+      }
 
       const taxRow = document.getElementById('cr-tax-row');
       if (taxRow) taxRow.style.display = taxRate > 0 ? 'flex' : 'none';

@@ -671,21 +671,49 @@
   margin: 2px 0;
 }
 
-.mls-calc-margin-row {
-  font-size: 13px;
+.mls-calc-margin-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.mls-calc-margin-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mls-calc-margin-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.mls-calc-margin-label {
+  font-size: 11px;
   font-weight: 700;
   color: #E6EDF3;
 }
 
-.mls-calc-margin-bar-wrap {
+.mls-calc-margin-hint {
+  font-size: 10px;
+  color: #586070;
+}
+
+.mls-calc-margin-values {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.mls-calc-margin-values > span:first-child {
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .mls-calc-margin-bar {
-  flex: 1;
-  height: 5px;
+  height: 4px;
   background: #1E2A3A;
   border-radius: 3px;
   overflow: hidden;
@@ -700,8 +728,22 @@
 .mls-calc-margin-pct {
   font-size: 11px;
   font-weight: 700;
-  min-width: 38px;
   text-align: right;
+}
+
+.mls-calc-roi-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #8892A4;
+  padding-top: 2px;
+  border-top: 1px solid #1E2A3A;
+}
+
+.mls-calc-roi-row span:last-child {
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .mls-calc-footnote {
