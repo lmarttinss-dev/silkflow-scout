@@ -360,9 +360,19 @@ function buildImportRegime(priceUSD) {
   return { label: 'Importação Formal', taxFree: false, tax: null, maxUSD: null };
 }
 
+function getNicheDemand(competition) {
+  if (!competition?.results?.length) return null;
+  const items = competition.results.filter(r => (r.sold_quantity || 0) > 0);
+  if (!items.length) return null;
+  const total = items.reduce((sum, r) => sum + r.sold_quantity, 0);
+  const avg = Math.round(total / items.length);
+  return { total, avg, sampleSize: items.length };
+}
+
 function buildAnalysis({ item, seller, category, reviews, competition, sameItem, score }) {
   const monthlySales = estimateMonthlySales(item, reviews);
   const priceStats = getPriceStats(competition, item.price);
+  const nicheDemand = getNicheDemand(competition);
 
   const reputationLabel = {
     '5_green': 'Ótima', '4_light_green': 'Boa',
@@ -421,7 +431,8 @@ function buildAnalysis({ item, seller, category, reviews, competition, sameItem,
     competition: {
       sameItem: numSellers,
       totalSearch,
-      priceStats
+      priceStats,
+      nicheDemand
     },
     opportunity: {
       label: opportunityLabel,
