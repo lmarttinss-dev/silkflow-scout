@@ -23,11 +23,12 @@ Não há etapa de build — a extensão roda direto do código-fonte.
 ## Funcionalidades
 
 - Score 0–100 com sub-scores de demanda, oportunidade, qualidade e vendedor
-- Calculadora de custo de importação com margem bruta em tempo real
+- Simulador de margem com margem bruta, margem líquida e ROI estimado
 - Elegibilidade de importação: detecta automaticamente certificações exigidas (ANATEL, ANVISA, INMETRO)
 - Regime aduaneiro automático (Remessa Conforme, Simplificada ou Formal)
+- Demanda total do nicho estimada via `sold_quantity` dos concorrentes
 - Posicionamento de preço em relação aos concorrentes
-- Estimativa de vendas mensais do produto e demanda total do nicho
+- Estimativa de vendas mensais do produto
 - Fallback via DOM quando a API retorna 403
 - Busca rápida no popup com fallback para autosuggest
 - Cache de 5 minutos no service worker

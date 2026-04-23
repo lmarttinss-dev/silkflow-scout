@@ -1,5 +1,27 @@
 # Arquitetura — Silkflow Scout
 
+## Índice
+
+- [Por que uma extensão?](#por-que-uma-extensão)
+- [Estrutura de arquivos](#estrutura-de-arquivos)
+- [Fluxo de execução](#fluxo-de-execução)
+- [Contrato dos módulos de marketplace](#contrato-dos-módulos-de-marketplace)
+- [Comunicação content ↔ background](#comunicação-content--background)
+- [Cadeia de fallback da API (Mercado Livre)](#cadeia-de-fallback-da-api-mercado-livre)
+- [Endpoints da API](#endpoints-da-api)
+- [Score](#score)
+  - [Pesos](#pesos)
+  - [Tabela de Demanda](#tabela-de-demanda)
+  - [Interpretação](#interpretação)
+- [Demanda do nicho](#demanda-do-nicho)
+- [Simulador de Margem](#simulador-de-margem)
+- [Elegibilidade de importação](#elegibilidade-de-importação)
+  - [Mapa por ID de categoria](#mapa-por-id-de-categoria-prioritário)
+  - [Fallback por palavras-chave](#fallback-por-palavras-chave-modo-dom)
+- [Adicionando um novo marketplace](#adicionando-um-novo-marketplace)
+- [Convenções de commit](#convenções-de-commit)
+
+
 ## Por que uma extensão?
 
 A API pública do Mercado Livre não expõe tudo que um vendedor precisa para tomar decisões de importação.
@@ -151,23 +173,38 @@ A função `getNicheDemand(competition)` em `background.js` aproveita o campo `s
 
 O resultado é exposto em `competition.nicheDemand` e exibido no painel abaixo da seção de oportunidade. Por ser uma amostra dos top 50 resultados de busca, o total representa um piso conservador do volume do nicho — não o mercado completo.
 
-## Calculadora de custo de importação
+## Simulador de Margem
+
+Permite calcular viabilidade financeira diretamente no painel, comparando o custo de importação da China com o preço atual do produto no marketplace.
+
+**Fórmulas:**
 
 ```
-Produto (BRL) = Preço China (U$) × 5,70
-Imposto       = (Produto + Frete) × alíquota do regime
-Custo total   = Produto + Frete + Imposto
-Comissão ML   = Preço ML × 12%
-Margem bruta  = Preço ML − Custo total − Comissão ML
+Produto (BRL)      = Preço China (U$) × 5,70
+Imposto importação = Produto (BRL) × alíquota do regime
+Custo de importação = Produto + Imposto
+
+Margem bruta       = Preço ML − Custo de importação
+Margem líquida     = Preço ML − Custo de importação − Frete nacional − Comissão ML (12%)
+ROI                = Margem líquida / (Custo de importação + Frete nacional) × 100%
 ```
 
 | Regime                  | Faixa (U$)    | Imposto  |
 |-------------------------|---------------|----------|
 | Remessa Conforme        | Até 50        | 0%       |
 | Importação Simplificada | 51–3.000      | 20%      |
-| Importação Formal       | Acima de 3000 | Variável |
+| Importação Formal       | Acima de 3.000 | Variável |
 
-A cotação U$ 1 ≈ R$ 5,70 é estática e serve apenas como referência visual.
+A alíquota é determinada automaticamente pela elegibilidade de importação. A cotação U$ 1 ≈ R$ 5,70 é estática e serve apenas como referência visual.
+
+**Interpretação das margens:**
+
+| Resultado | Verde (≥30%) | Amarelo (≥15%) | Laranja (<15%) |
+|-----------|-------------|----------------|----------------|
+| Margem bruta | Excelente spread de importação | Margem razoável | Importação arriscada |
+| Margem líquida | Operação saudável | Margem apertada | Prejuízo provável |
+| ROI | Alto retorno | Retorno moderado | Retorno baixo |
+
 
 ## Elegibilidade de importação
 
