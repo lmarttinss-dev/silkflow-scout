@@ -126,16 +126,12 @@
       <div class="mls-section-title">Buscar Fornecedor</div>
       <div class="mls-supplier-section">
         <div class="mls-supplier-btns">
-          <button class="mls-supplier-btn" id="mls-search-1688">
-            <span class="mls-supplier-flag">🇨🇳</span> 1688
-          </button>
           <button class="mls-supplier-btn" id="mls-search-alibaba">
             <span class="mls-supplier-flag">🌐</span> Alibaba
           </button>
         </div>
         <div class="mls-supplier-hints">
-          <span class="mls-supplier-hint">Mandarim</span>
-          <span class="mls-supplier-hint">Inglês · Trade Assurance</span>
+          <span class="mls-supplier-hint">Inglês · Trade Assurance · Verified Supplier</span>
         </div>
         <button class="mls-supplier-btn mls-supplier-btn-image" id="mls-search-lens"
           ${hasImage ? '' : 'disabled title="Imagem não disponível para este produto"'}>
@@ -146,20 +142,6 @@
   }
 
   function initSupplierButtons(data) {
-    const btn1688 = document.getElementById('mls-search-1688');
-    if (btn1688) {
-      btn1688.addEventListener('click', () => {
-        btn1688.textContent = '...';
-        btn1688.disabled = true;
-        chrome.runtime.sendMessage({ type: 'TRANSLATE_TITLE', title: data.title, targetLang: 'zh-CN' }, (response) => {
-          const query = response?.translated || data.title;
-          window.open(`https://s.1688.com/selloffer/offer_search.htm?keywords=${encodeURIComponent(query)}`, '_blank');
-          btn1688.innerHTML = '<span class="mls-supplier-flag">🇨🇳</span> 1688';
-          btn1688.disabled = false;
-        });
-      });
-    }
-
     const btnAlibaba = document.getElementById('mls-search-alibaba');
     if (btnAlibaba) {
       btnAlibaba.addEventListener('click', () => {
