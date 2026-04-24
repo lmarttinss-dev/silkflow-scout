@@ -119,6 +119,24 @@
       </div>`;
   }
 
+  function renderNCMSuggestion(ncm) {
+    if (!ncm) return '';
+    const confidenceColor = ncm.confidence === 'alta' ? '#00C853' : '#FFD600';
+    const confidenceLabel = ncm.confidence === 'alta' ? 'Alta confiança' : 'Confiança média';
+    return `
+      <div class="mls-divider"></div>
+      <div class="mls-section-title">Código NCM Sugerido</div>
+      <div class="mls-ncm-card">
+        <div class="mls-ncm-main">
+          <span class="mls-ncm-code">${escapeHtml(ncm.ncm)}</span>
+          <button class="mls-ncm-copy" id="mls-ncm-copy" title="Copiar código NCM">📋</button>
+        </div>
+        <div class="mls-ncm-desc">${escapeHtml(ncm.desc)}</div>
+        <div class="mls-ncm-confidence" style="color:${confidenceColor}">${confidenceLabel}</div>
+        <div class="mls-ncm-disclaimer">Sugestão estimada por palavras-chave. Confirme com um despachante aduaneiro.</div>
+      </div>`;
+  }
+
   function renderSupplierSection(thumbnail) {
     const hasImage = !!thumbnail;
     return `
@@ -127,7 +145,7 @@
       <div class="mls-supplier-section">
         <div class="mls-supplier-btns">
           <button class="mls-supplier-btn" id="mls-search-alibaba">
-            <span class="mls-supplier-flag">🌐</span> Alibaba
+            <img class="mls-supplier-icon" src="https://www.alibaba.com/favicon.ico" alt="Alibaba"> Alibaba
           </button>
         </div>
         <div class="mls-supplier-hints">
@@ -150,7 +168,7 @@
         chrome.runtime.sendMessage({ type: 'TRANSLATE_TITLE', title: data.title, targetLang: 'en' }, (response) => {
           const query = response?.translated || data.title;
           window.open(`https://www.alibaba.com/trade/search?fsb=y&IndexArea=product_en&keywords=${encodeURIComponent(query)}&originKeywords=${encodeURIComponent(query)}&ta=y&assessmentCompany=true`, '_blank');
-          btnAlibaba.innerHTML = '<span class="mls-supplier-flag">🌐</span> Alibaba';
+          btnAlibaba.innerHTML = '<img class="mls-supplier-icon" src="https://www.alibaba.com/favicon.ico" alt="Alibaba"> Alibaba';
           btnAlibaba.disabled = false;
         });
       });
@@ -240,6 +258,7 @@
         <div class="mls-niche-sub">média de ${formatNumber(competition.nicheDemand.avg)} por anúncio · amostra de ${competition.nicheDemand.sampleSize} produtos</div>
       </div>` : ''}
       ${renderImportEligibility(data.importEligibility)}
+      ${renderNCMSuggestion(data.ncmSuggestion)}
       ${renderSupplierSection(data.thumbnail)}
       <div class="mls-footer"><span>${data.itemId}</span><button class="mls-refresh-btn" id="mls-refresh">↻ Atualizar</button></div>`;
   }
@@ -312,6 +331,15 @@
       setLoading();
       chrome.runtime.sendMessage({ type: 'CLEAR_CACHE' }, () => requestAnalysis(currentPageInfo));
     });
+    const btnCopyNCM = panel.querySelector('#mls-ncm-copy');
+    if (btnCopyNCM && data.ncmSuggestion?.ncm) {
+      btnCopyNCM.addEventListener('click', () => {
+        navigator.clipboard.writeText(data.ncmSuggestion.ncm).then(() => {
+          btnCopyNCM.textContent = '✅';
+          setTimeout(() => { btnCopyNCM.textContent = '📋'; }, 1500);
+        });
+      });
+    }
     initSupplierButtons(data);
   }
 

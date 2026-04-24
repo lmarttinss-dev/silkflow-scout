@@ -630,6 +630,68 @@
   margin-top: 2px;
 }
 
+/* ── NCM Suggestion ──────────────────────────────────────────────────────────── */
+
+.mls-ncm-card {
+  margin: 4px 16px 10px;
+  background: #161B22;
+  border: 1px solid #21262D;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mls-ncm-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mls-ncm-code {
+  font-size: 20px;
+  font-weight: 700;
+  color: #E6EDF3;
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mls-ncm-copy {
+  background: #1C2331;
+  border: 1px solid #1E2A3A;
+  border-radius: 6px;
+  color: #8892A4;
+  font-size: 14px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.mls-ncm-copy:hover {
+  border-color: #FFE600;
+  color: #FFE600;
+}
+
+.mls-ncm-desc {
+  font-size: 12px;
+  color: #C9D1D9;
+}
+
+.mls-ncm-confidence {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.mls-ncm-disclaimer {
+  font-size: 9px;
+  color: #4A5568;
+  line-height: 1.4;
+  border-top: 1px solid #1E2A3A;
+  padding-top: 5px;
+  margin-top: 2px;
+}
+
 /* ── Supplier Section ────────────────────────────────────────────────────────── */
 
 .mls-supplier-section {
@@ -676,6 +738,13 @@
 
 .mls-supplier-flag {
   font-size: 14px;
+}
+
+.mls-supplier-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  vertical-align: middle;
 }
 
 .mls-supplier-hints {

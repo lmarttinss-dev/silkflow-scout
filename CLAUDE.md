@@ -80,6 +80,17 @@ When `item._fromDom === true`, `analyzeProduct()` skips API calls for seller/cat
 2. Register it in `MODULES` array in `content.js`
 3. Add URL patterns to `matches` and `host_permissions` in `manifest.json`
 
+## Git workflow
+
+**Nunca commitar direto na `main`.** Sempre criar uma branch antes de qualquer mudança — feat, fix, refactor, docs, style ou chore:
+
+```bash
+git checkout main
+git checkout -b <tipo>/<descricao-curta>
+```
+
+Exemplos de nome de branch: `feat/ncm-suggestion`, `fix/price-extraction`, `refactor/score-weights`.
+
 ## Git conventions
 
 Commits seguem o padrão **Conventional Commits** em inglês:
