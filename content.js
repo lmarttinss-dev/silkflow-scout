@@ -167,7 +167,7 @@
         btnAlibaba.disabled = true;
         chrome.runtime.sendMessage({ type: 'TRANSLATE_TITLE', title: data.title, targetLang: 'en' }, (response) => {
           const query = response?.translated || data.title;
-          window.open(`https://www.alibaba.com/trade/search?fsb=y&IndexArea=product_en&keywords=${encodeURIComponent(query)}&originKeywords=${encodeURIComponent(query)}&ta=y`, '_blank');
+          window.open(`https://www.alibaba.com/trade/search?fsb=y&IndexArea=product_en&keywords=${encodeURIComponent(query)}&originKeywords=${encodeURIComponent(query)}&ta=y&assessmentCompany=true`, '_blank');
           btnAlibaba.innerHTML = '<span class="mls-supplier-flag">🌐</span> Alibaba';
           btnAlibaba.disabled = false;
         });
