@@ -344,6 +344,76 @@ function checkImportEligibility(categoryPath, title, pathFromRoot = []) {
   };
 }
 
+const NCM_TABLE = [
+  // Eletrônicos — comunicação
+  { ncm: '8517.12.31', desc: 'Telefones para redes celulares',       keywords: ['smartphone', 'celular', 'iphone', 'android', 'telefone'] },
+  { ncm: '8471.30.12', desc: 'Tablets',                               keywords: ['tablet', 'ipad'] },
+  { ncm: '8471.30.19', desc: 'Computadores portáteis',                keywords: ['notebook', 'laptop', 'macbook', 'chromebook'] },
+  { ncm: '8517.62.99', desc: 'Roteadores wireless',                   keywords: ['roteador', 'router', 'wi-fi', 'wifi', 'modem'] },
+  // Eletrônicos — áudio e imagem
+  { ncm: '8518.30.00', desc: 'Fones de ouvido',                       keywords: ['fone', 'headphone', 'earphone', 'earbuds', 'headset', 'auricular', 'in-ear'] },
+  { ncm: '8518.22.00', desc: 'Alto-falantes',                         keywords: ['caixa de som', 'speaker', 'alto-falante', 'caixinha bluetooth'] },
+  { ncm: '8525.80.19', desc: 'Câmeras digitais',                      keywords: ['câmera', 'camera', 'webcam', 'filmadora'] },
+  { ncm: '9102.12.00', desc: 'Relógios inteligentes',                 keywords: ['smartwatch', 'relógio inteligente', 'relogio inteligente'] },
+  // Eletrônicos — periféricos e acessórios
+  { ncm: '8471.60.52', desc: 'Teclados para computadores',            keywords: ['teclado', 'keyboard'] },
+  { ncm: '8471.60.53', desc: 'Mouses para computadores',              keywords: ['mouse', 'trackpad'] },
+  { ncm: '8504.40.30', desc: 'Carregadores e adaptadores',            keywords: ['carregador', 'charger', 'adaptador', 'fonte usb'] },
+  { ncm: '8507.60.00', desc: 'Baterias de íons de lítio (power bank)',keywords: ['power bank', 'bateria portátil', 'bateria portatil'] },
+  { ncm: '8544.42.00', desc: 'Cabos para dados/carga',                keywords: ['cabo usb', 'cabo type-c', 'cabo lightning', 'cabo carregador'] },
+  { ncm: '8806.91.00', desc: 'Aeronaves não tripuladas (drones)',      keywords: ['drone', 'quadricóptero', 'quadricopter'] },
+  { ncm: '9405.10.99', desc: 'Aparelhos de iluminação LED',           keywords: ['led', 'lâmpada', 'lampada', 'luminária', 'luminaria', 'fita led'] },
+  // Eletrodomésticos
+  { ncm: '8516.71.00', desc: 'Cafeteiras elétricas',                  keywords: ['cafeteira', 'nespresso', 'espresso', 'coffee maker'] },
+  { ncm: '8516.60.00', desc: 'Fritadeiras a ar (air fryer)',           keywords: ['air fryer', 'fritadeira air', 'fritadeira sem óleo'] },
+  { ncm: '8509.40.00', desc: 'Liquidificadores',                      keywords: ['liquidificador', 'blender', 'mixer'] },
+  { ncm: '8508.19.00', desc: 'Aspiradores de pó',                     keywords: ['aspirador', 'vacuum', 'robô aspirador', 'robo aspirador'] },
+  { ncm: '8516.50.00', desc: 'Fornos de micro-ondas',                 keywords: ['microondas', 'micro-ondas', 'microwave'] },
+  { ncm: '8516.40.00', desc: 'Ferros de passar roupa',                keywords: ['ferro de passar', 'iron'] },
+  // Cuidados pessoais
+  { ncm: '8516.32.00', desc: 'Chapinhas e alisadores de cabelo',      keywords: ['chapinha', 'prancha', 'alisador', 'flat iron', 'escova alisadora'] },
+  { ncm: '8516.31.00', desc: 'Secadores de cabelo',                   keywords: ['secador', 'hair dryer', 'secador de cabelo'] },
+  { ncm: '8510.10.00', desc: 'Barbeadores elétricos',                 keywords: ['barbeador', 'shaver', 'barbeador elétrico'] },
+  { ncm: '8509.80.11', desc: 'Escovas dentais elétricas',             keywords: ['escova dental elétrica', 'electric toothbrush'] },
+  // Pet
+  { ncm: '4201.00.00', desc: 'Arreios e artigos para animais',        keywords: ['coleira', 'peitoral', 'harness', 'guia pet', 'coleira pet', 'dog collar'] },
+  { ncm: '2309.10.00', desc: 'Alimentos para cães e gatos',           keywords: ['ração', 'racao', 'pet food', 'alimento para pet', 'alimento para gato', 'alimento para cão'] },
+  { ncm: '9503.00.00', desc: 'Brinquedos para animais',               keywords: ['brinquedo pet', 'brinquedo gato', 'brinquedo cachorro', 'pet toy'] },
+  // Brinquedos
+  { ncm: '9503.00.10', desc: 'Conjuntos para construção (blocos)',     keywords: ['lego', 'blocos de montar', 'building blocks', 'peças de montar'] },
+  { ncm: '9503.00.95', desc: 'Brinquedos e bonecas',                  keywords: ['brinquedo', 'boneca', 'doll', 'action figure', 'pelúcia', 'pelucia'] },
+  { ncm: '9503.00.99', desc: 'Brinquedos com controle remoto',        keywords: ['controle remoto', 'rc car', 'carrinho controle', 'helicóptero controle'] },
+  // Esportes e fitness
+  { ncm: '9506.91.00', desc: 'Artigos para ginástica e atletismo',    keywords: ['haltere', 'anilha', 'dumbbell', 'kettlebell', 'barra de musculação'] },
+  { ncm: '3926.90.90', desc: 'Tapetes e acessórios de plástico',      keywords: ['tapete yoga', 'yoga mat', 'tapete de exercício'] },
+  { ncm: '6217.10.00', desc: 'Acessórios de vestuário fitness',       keywords: ['elástico de resistência', 'resistance band', 'faixa elástica'] },
+  // Bolsas e malas
+  { ncm: '4202.92.00', desc: 'Mochilas',                              keywords: ['mochila', 'backpack'] },
+  { ncm: '4202.21.00', desc: 'Bolsas de mão',                         keywords: ['bolsa', 'handbag', 'clutch'] },
+  { ncm: '4202.11.00', desc: 'Malas de viagem',                       keywords: ['mala', 'mala de viagem', 'suitcase', 'trolley'] },
+  // Calçados e vestuário
+  { ncm: '6404.11.00', desc: 'Calçados esportivos',                   keywords: ['tênis', 'tenis', 'sneaker', 'calçado esportivo'] },
+  { ncm: '6109.10.00', desc: 'T-shirts e camisetas de algodão',       keywords: ['camiseta', 't-shirt', 'blusa', 'camisa'] },
+  { ncm: '6104.63.00', desc: 'Calças de fibras sintéticas',           keywords: ['legging', 'calça legging', 'shorts', 'bermuda'] },
+];
+
+function suggestNCM(title = '', categoryPath = '') {
+  const haystack = `${title} ${categoryPath}`.toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+  let best = null, bestScore = 0;
+  for (const entry of NCM_TABLE) {
+    let score = 0;
+    for (const kw of entry.keywords) {
+      const normalized = kw.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      if (haystack.includes(normalized)) score += normalized.split(' ').length;
+    }
+    if (score > bestScore) { bestScore = score; best = entry; }
+  }
+  if (!best) return null;
+  return { ncm: best.ncm, desc: best.desc, confidence: bestScore >= 3 ? 'alta' : 'média' };
+}
+
 function buildImportRegime(priceUSD) {
   if (priceUSD > 3000) return { label: 'Importação Formal', taxFree: false, tax: null, maxUSD: null };
   return { label: 'Importação Simplificada', taxFree: false, tax: 20, maxUSD: 3000 };
@@ -439,7 +509,8 @@ function buildAnalysis({ item, seller, category, reviews, competition, sameItem,
       note: eligibility.note || null,
       regime,
       priceUSD
-    }
+    },
+    ncmSuggestion: suggestNCM(item.title || '', categoryPath)
   };
 }
 
